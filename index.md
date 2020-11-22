@@ -2,6 +2,15 @@
 
 ![](/logo.png)
 
+## Game Download
+Put download link to latest version & text here
+
+## Screenshots
+Put some screenshots of the impressive parts here
+
+## Past Versions
+May be able to create a table with all the old build of the game?
+
 ## Game Requirements
 
 (Needs UoY login)
