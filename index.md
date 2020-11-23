@@ -4,6 +4,7 @@
 
 ## Game Download
 Get the latest version of our game [here](https://www.google.com "Latest Build"). (Change placeholder link)
+Or view the documentation [here](/game "Documentation").
 
 ## Screenshots
 {% include carousel.html height="50" unit="%" duration="7" %}
