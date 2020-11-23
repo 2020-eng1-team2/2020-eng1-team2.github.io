@@ -1,6 +1,6 @@
 # Marlin Studio
 
-![](Resources/logo.png)
+![](Images/logo.png)
 
 ## Game Download
 Get the latest version of our game [here](https://www.google.com "Latest Build"). (Change placeholder link)
