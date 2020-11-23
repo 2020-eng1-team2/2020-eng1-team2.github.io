@@ -17,3 +17,27 @@ May be able to create a table with all the old build of the game?
 (Needs UoY login)
 
 <iframe src="https://docs.google.com/document/d/e/2PACX-1vQt33c9AB3LqExvPEQH24o7iQawbQMSk_icWwRx_UyRT3iDlySp1wEVjjfmvkcYtJe5f3Dl2-P2rvCl/pub?embedded=true" width="700"></iframe>
+
+## Devlopment Risks
+
+(Needs UoY login)
+
+Not finished just yet. Will update when it is
+
+## Method Selection and Planning
+
+(Needs UoY login)
+
+Not finished just yet. Will update when it is
+
+## Architecture
+
+(Needs UoY login)
+
+Not finished just yet. Will update when it is
+
+## Implementation
+
+(Needs UoY login)
+
+Not finished just yet. Will update when it is
