@@ -1,11 +1,10 @@
 ---
 title: Marlin Studios
 ---
-
-docs:
-  - title: Download
-    url: /#
-  - title: Documentaion
-    url: /game
-  - title: Deliverables
-    url: /deliverables
+  docs
+    - title: Download
+      url: /#
+    - title: Documentaion
+      url: /game
+    - title: Deliverables
+      url: /deliverables
