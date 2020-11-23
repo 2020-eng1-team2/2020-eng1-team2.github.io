@@ -1,12 +1,12 @@
 # Marlin Studio
 
-![](/logo.png)
+![](Resources/logo.png)
 
 ## Game Download
-Put download link to latest version & text here
+Get the latest version of our game [here](https://www.google.com "Latest Build"). (Change placeholder link)
 
 ## Screenshots
-Put some screenshots of the impressive parts here
+{% include carousel.html height="50" unit="%" duration="7" %}
 
 ## Past Versions
 May be able to create a table with all the old build of the game?
