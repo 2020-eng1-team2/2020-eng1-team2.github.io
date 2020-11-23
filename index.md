@@ -14,6 +14,6 @@ May be able to create a table with all the old build of the game?
 
 ## Game Requirements
 
-(Needs UoY login) SET THIS TO NEW DOCUMENT?
+(Needs UoY login)
 
-<iframe src="https://docs.google.com/document/d/e/2PACX-1vSpYnHQERPBEKTfu6u7jbWGK07JpBDb0FXgb6J5HYC2c9oDmzqwAVuqoHTK3cBisoQhZRNjwngtV3g-/pub?embedded=true" width="700"></iframe>
+<iframe src="https://docs.google.com/document/d/e/2PACX-1vQt33c9AB3LqExvPEQH24o7iQawbQMSk_icWwRx_UyRT3iDlySp1wEVjjfmvkcYtJe5f3Dl2-P2rvCl/pub?embedded=true" width="700"></iframe>
