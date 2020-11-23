@@ -3,7 +3,7 @@
 ![](Images/logo.png)
 
 ## Game Download
-Get the latest version of our game [here](https://www.google.com "Latest Build"). (Change placeholder link)
+Get the latest version of our game [here](https://www.google.com "Latest Build"). (Change placeholder link)<br/>
 Or view the documentation [here](/game "Documentation").
 
 ## Screenshots
