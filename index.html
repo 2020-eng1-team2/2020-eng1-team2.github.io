@@ -5,12 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marlin Studio - Auber</title>
     <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css" crossorigin="anonymous">
+    <style>
+        @media screen and (min-width: 992px) {
+            #sidenav {
+                position: fixed;
+            }
+        }
+    </style>
 </head>
 <body data-spy="scroll" data-target="#sidenav">
     <div class="container">
         <div class="row">
-            <div class="col-2">
-                <nav class="nav flex-column position-fixed pt-5" style="max-width: 25%" id="sidenav">
+            <div class="col-lg-2">
+                <nav class="nav flex-column pt-5" style="max-width: 25%" id="sidenav">
                     <a class="nav-link active" href="#downloads">Downloads</a>
                     <a class="nav-link" href="#screenshots">Screenshots</a>
                     <a class="nav-link" href="#features">Features</a>
@@ -18,12 +25,12 @@
                     <a class="nav-link" href="#deliverables">Deliverables</a>
                 </nav>
             </div>
-            <div class="col-10">
+            <div class="col-lg-10">
                 <div class="row justify-content-center">
-                    <img src="logo.png" class="studio-logo col-3">
+                    <img src="logo.png" class="studio-logo col-3 img-fluid">
                 </div>
                 <div class="row justify-content-center">
-                    <img src="title.png" class="game-logo col-6">
+                    <img src="title.png" class="game-logo col-6 img-fluid">
                 </div>
                 <div class="row justify-content-center">
                     <h2 id="downloads">Downloads</h2>
