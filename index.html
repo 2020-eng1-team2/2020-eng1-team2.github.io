@@ -1,157 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marlin Studio - Auber</title>
-    <link rel="stylesheet" href="https://bootswatch.com/4/darkly/bootstrap.min.css" crossorigin="anonymous">
-    <style>
-        @media screen and (min-width: 992px) {
-            #sidenav {
-                position: fixed;
-            }
-        }
-        hr {
-            border-top: 1px solid rgba(255,255,255,.3)
-        }
-    </style>
-</head>
-<body data-spy="scroll" data-target="#sidenav">
-    <br>
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-2">
-                <nav class="nav flex-column pt-5" style="max-width: 25%" id="sidenav">
-                    <a class="nav-link active" href="#downloads">Downloads</a>
-                    <a class="nav-link" href="#screenshots">Screenshots</a>
-                    <a class="nav-link" href="#features">Features</a>
-                    <a class="nav-link" href="#architecture">Architecture</a>
-                    <a class="nav-link" href="#deliverables">Deliverables</a>
-                    <a class="nav-link" href="#planning">Planning</a>
-                </nav>
+<html>
+    <head>
+        <title>Auber | 3³ Studios</title>
+        <link rel="icon" type="image/png" href="logo.png">
+        <link rel="stylesheet" href="https://use.typekit.net/qui7hwg.css">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <h1>
+            <img src="logo.png" alt="3³ Studios">
+            studios
+        </h1>
+        <h2>Auber</h2>
+        <div id="content">
+            <div id="contents-box">
+                <p>Contents</p>
             </div>
-            <div class="col-lg-10">
-                <div class="row justify-content-center">
-                    <img src="logo.png" class="studio-logo col-3 img-fluid">
-                </div>
-                <div class="row justify-content-center">
-                    <img src="title.png" class="game-logo col-6 img-fluid">
-                </div>
-                <div class="row justify-content-center">
-                    <h2 id="downloads">Downloads</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <a href="https://github.com/2020-eng1-team2/game/releases/" target="_blank" class="btn btn-primary d-block w-100 my-1">
-                        <img src="icons/get_app-white-18dp.svg" />
-                        Game JAR
-                    </a>
-                    <a href="https://github.com/2020-eng1-team2/game" target="_blank" class="btn btn-primary d-block w-100 my-1">
-                        <img src="icons/code-white-18dp.svg" />
-                        Source Code
-                    </a>
-                    <a href="https://2020-eng1-team2.github.io/game" target="_blank" class="btn btn-primary d-block w-100 my-1">
-                        <img src="icons/description-white-18dp.svg" />
-                        Class Documentation (Javadoc)
-                    </a>
-                </div>
-                <div class="row justify-content-center">
-                    <h2 id="screenshots">Screenshots</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="carousel slide" data-ride="carousel" id="screenshotsCarousel">
-                        <div class="carousel-inner">
-                            <div class="carousel-item active">
-                                <img class="img-fluid d-block w-100" src="images/screenshot0.png" />
-                            </div>
-                            <div class="carousel-item">
-                                <img class="img-fluid d-block w-100" src="images/screenshot1.png" />
-                            </div>
-                            <div class="carousel-item">
-                                <img class="img-fluid d-block w-100" src="images/screenshot2.png" />
-                            </div>
-                            <div class="carousel-item">
-                                <img class="img-fluid d-block w-100" src="images/screenshot4.jpg" />
-                            </div>
-                            <div class="carousel-item">
-                                <img class="img-fluid d-block w-100" src="images/screenshot5.jpg" />
-                            </div>
-                            <div class="carousel-item">
-                                <img class="img-fluid d-block w-100" src="images/screenshot6.jpg" />
-                            </div>
-                        </div>
-                        <a class="carousel-control-prev" href="#screenshotsCarousel" role="button" data-slide="prev">
-                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Previous</span>
-                          </a>
-                          <a class="carousel-control-next" href="#screenshotsCarousel" role="button" data-slide="next">
-                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                            <span class="sr-only">Next</span>
-                          </a>
-                    </div>
-                </div>
-                <div class="row justify-content-center">
-                    <h2 id="features" class="d-block">Features</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-8">
-                        <ul class="d-block">
-                            <li>Large map with seven rooms</li>
-                            <li>8 infiltrators</li>
-                            <li>Arrest gun</li>
-                            <li>Teleport pads around the map</li>
-                            <li>Healing and damage</li>
-                            <li>Entity-Component-System architecture</li>
-                        </ul>
-                    </div>
-                </div>
-                <hr />
-                <div class="row justify-content-center">
-                    <h2 id="architecture" class="d-block">Architecture</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-8">
-                        <p>
-                            The game uses an Entity-Component-System architecture for flexibility.
-                            The game is built up of Entities (objects that hold components), Components (that store data about an entity),
-                            and Systems (that operate on components).
-                        </p>
-                        <img src="images/uml1.png" class="img-fluid" />
-                    </div>
-                </div>
-                <hr />
-                <div class="row justify-content-center">
-                    <h2 id="deliverables" class="d-block">Deliverables</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-8">
-                        <ul class="d-block">
-                            <li><a href="https://drive.google.com/file/d/1X3tpeAfmqb1RMARDE3QV36LQBFOkIKpK/view?usp=sharing">Requirements</a></li>
-                            <li><a href="https://drive.google.com/file/d/1wcs3Ewk2ysBvVnPuSZmFbxcBp-ROF5t-/view?usp=sharing">Architecture</a></li>
-                            <li><a href="https://drive.google.com/file/d/1H2HD53xVap5HZ7hSBFFtAH9OVZ00CntX/view?usp=sharing">Method Selection and Planning</a></li>
-                            <li><a href="https://drive.google.com/file/d/1Skpu0nIZGpOFtrM0tQnuP_a_jcNsw6P8/view?usp=sharing">Risk Assessment and Mitigation</a></li>
-                            <li><a href="https://drive.google.com/file/d/1YlQuIewsg1Rq2muHLLSLxvHveQrmsYMh/view?usp=sharing">Implementation</a></li>
-                        </ul>
-                    </div>
-                </div>
-                <hr />
-                <div class="row justify-content-center">
-                    <h2 id="planning" class="d-block">Planning</h2>
-                </div>
-                <div class="row justify-content-center">
-                    <div class="col-8">
-                        <p>Unfortunately, due to a misunderstanding of the assessment document, we did not keep weekly snapshots of our plan, but did keep progress, goals and set tasks, logged in our weekly meeting notes. Thus, we were able to compile all of our meeting notes to create an entire project plan, which can be seen below.</p>
-                        <img src="gantty-boi.png" class="img-fluid" />
-                    </div>
-                </div>
-            </div>
+            <h3 id="documentation">Documentation</h3>
+            <p><a href="https://threecubedstudios.github.io/auber/">1. Website</a></p>
+            <p><a href="https://drive.google.com/file/d/19mL0lYUe0x36kFN0EL_6EFXPpIeDFjEO/view?usp=sharing">2. Requirements</a></p>
+            <p><a href="https://drive.google.com/file/d/1o3OU8bo39t3wgPPu9OEP6zJ54Z_jM80C/view?usp=sharing">3. Architecture</a></p>
+            <p><a href="https://drive.google.com/file/d/15F284AQQC04MmyVMKJN00smUeKLN2elQ/view?usp=sharing">4. Method Selection and Planning</a></p>
+            <p><a href="https://drive.google.com/file/d/1ltPvR_w1VSTsgzMbm4vs_7V4W8vrjSKT/view?usp=sharing">5. Risk Assessment and Mitigation</a></p>
+            <p><a href="https://drive.google.com/file/d/1TeTnuYcloA17wot_ERS1VvWJNfTBTeg1/view?usp=sharing">6. Implementation</a></p>
+            <p><a href="https://drive.google.com/file/d/1CoxiBXMJBZhhFLvYLqODq_kQNVLN9Uu-/view?usp=sharing">8. Self-Assessment Table</a></p>
+            <h3 id="builds">Builds</h3>
+            <p><a href="https://drive.google.com/file/d/1f8fNV8tfYLLfs8FM5eZCUB1xhqkU53xf/view?usp=sharing">Build 1 [~05/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1A2wBVNAJdFb2qewvv9756J4JB5l5sBXl/view?usp=sharing">Build 2 [~09/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1iFtnTSMXIB1KpJzP44aypBQOD58iqgis/view?usp=sharing">Build 3 [~13/10/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1ftP52NpTI6Psh4N1CfqCJJ9XugKikcW-/view?usp=sharing">Build 4 [~13/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1gx-YoMQrlY7F-S93E9_3SXLoxq8Eiue_/view?usp=sharing">Build 5 [~14/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1b0WwViahdJieSLp-3hllBW_WbkHII0A9/view?usp=sharing">Build 6 [15/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1KB9dTB3H7jzaiYgokorHxR-agDGJjYHX/view?usp=sharing">Build 7 [23/11/2020]</a></p>
+            <p><a href="https://drive.google.com/file/d/1qX3ZOBYz0F82QzppGx49z7LwMZE-JmbS/view?usp=sharing">Release Candidate 1</a></p>
+            <p><a href="https://drive.google.com/file/d/1Tz0rxqM8xz5jIVdVNi4czY7Xiu7SDz0z/view?usp=sharing">Release Candidate 2</a></p>
+            <p><a href="https://drive.google.com/file/d/1AwTYnpywa2FFz3QveA4Ero6NBj5BisYl/view?usp=sharing">Final Build (Non-scalable)</a></p>
+            <p><a href="https://drive.google.com/file/d/1PKoO4WhdRMGs0WT90f3bEN7uzdTnUX2l/view?usp=sharing">Final Build (Scalable on Linux)</a></p>
+            <h3 id="assessment-documents">Assessment Documents</h3>
+            <p><a href="pdfs/auberbrief.pdf">Auber Brief</a></p>
+            <p><a href="pdfs/assessmentbrief.pdf">Assessment Brief</a></p>
+            <h3 id="javadocs">Javadocs</h3>
+            <p><a href="javadocs/" target="_blank">Javadocs can be found here</a></p>
+            <h3 id="github-repository">GitHub Repository</h3>
+            <p><a href="https://github.com/threecubedstudios/auber" target="_blank">The GitHub repository can be found here</a></p>
         </div>
-    </div>
-    <footer>
-        <small>
-            Copyright &copy; 2020 Marlin Studio (ENG1 Team 2). All rights reserved. Website built using Bootstrap and Bootswatch (licensed under the MIT license). Icons &copy; Material Design Icons, licensed under the Apache License 2.0.
-        </small>
-    </footer>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
-</body>
+        <script>
+            const contentsBox = document.getElementById('contents-box')
+            const headers = document.querySelectorAll('h3, h4, h5, h6')
+
+            for (var i=0; i<headers.length; i++) {
+                var item = headers[i]
+                if (item.id === '') {
+                    item.id = item.innerHTML.toLowerCase().replace(' ', '-')
+                }
+                var indentation = (parseInt(item.tagName[1]) - 3) * 20
+                contentsBox.innerHTML += '<li style="padding-left: ' + indentation.toString() + 'px"><a href="#' + item.id + '">' + item.innerHTML + '</a></li>'
+            }
+        </script>
+    </body>
 </html>
