@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Infiltrator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.entities</a> &gt; <span class="el_source">Infiltrator.java</span></div><h1>Infiltrator.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.entities;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Timer.Task;
+import com.threecubed.auber.Utils;
+import com.threecubed.auber.World;
+
+import java.util.Random;
+
+
+/**
+ * The infiltrator is the enemy of the game, it will navigate from system to system and sabotage
+ * them until caught by the {@link Player}.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class Infiltrator extends Npc {
+<span class="pc" id="L26">  public boolean exposed = false;</span>
+  transient Sprite unexposedSprite;
+
+  /**
+   * Initialise the infiltrator at a random position.
+   *
+   * @param world The game world
+   * */
+  public Infiltrator(World world) {
+<span class="fc" id="L35">    super(world);</span>
+<span class="fc" id="L36">    navigateToRandomSystem(world);</span>
+<span class="pc bpc" id="L37" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L38">      unexposedSprite = new Sprite(sprite);</span>
+    }
+<span class="fc" id="L40">  }</span>
+
+  /**
+   * This constructor is necessary for save-loading to work.
+   * It should NEVER be used directly by a human!
+   */
+  public Infiltrator() {
+<span class="nc" id="L47">    super();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L49">      unexposedSprite = new Sprite(sprite);</span>
+    }
+<span class="nc" id="L51">  }</span>
+
+  @Override
+  public void update(World world) {
+<span class="fc" id="L55">    super.update(world);</span>
+<span class="pc bpc" id="L56" title="3 of 6 branches missed.">    if (exposed &amp;&amp; !entityOnScreen(world) &amp;&amp; !world.player.vision) {</span>
+<span class="fc" id="L57">      exposed = false;</span>
+<span class="fc" id="L58">      sprite = unexposedSprite;</span>
+    }
+<span class="nc bnc" id="L60" title="All 2 branches missed.">    else if (exposed) {</span>
+<span class="nc" id="L61">      sprite = world.atlas.createSprite(&quot;infiltrator&quot;);</span>
+    }
+<span class="fc" id="L63">  }</span>
+
+  @Override
+  public void handleDestinationReached(World world) {
+<span class="nc" id="L67">    States oldState = state;</span>
+<span class="nc" id="L68">    state = States.IDLE;</span>
+
+    // Infiltrator won't try and sabotage a system if it has just been fleeing.
+<span class="nc bnc" id="L71" title="All 2 branches missed.">    if (oldState != States.FLEEING) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">      if (!playerNearby(world)</span>
+<span class="nc bnc" id="L73" title="All 2 branches missed.">          &amp;&amp; Utils.randomFloatInRange(world.randomNumberGenerator, 0, 1)</span>
+          &lt; world.SYSTEM_SABOTAGE_CHANCE) {
+<span class="nc" id="L75">        attackNearbySystem(world);</span>
+      } else {
+<span class="nc" id="L77">        idleForGivenTime(world, Utils.randomFloatInRange(world.randomNumberGenerator, 5f, 8f));</span>
+      }
+    }
+<span class="nc" id="L80">  }</span>
+
+  @Override
+  public void handleTeleporterShot(final World world) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">    if (state == States.ATTACKING_SYSTEM) {</span>
+<span class="nc" id="L85">      RectangleMapObject system = getNearbyObjects(World.map);</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">      if (system != null) {</span>
+<span class="nc" id="L87">        Rectangle boundingBox = system.getRectangle();</span>
+<span class="nc" id="L88">        world.updateSystemState(boundingBox.x, boundingBox.y, World.SystemStates.WORKING);</span>
+      }
+    }
+
+<span class="fc bfc" id="L92" title="All 2 branches covered.">    if (!exposed) {</span>
+<span class="fc" id="L93">      exposed = true;</span>
+<span class="fc" id="L94">      fireProjectileAtPlayer(world);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">      if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L96">        sprite = world.atlas.createSprite(&quot;infiltrator&quot;);</span>
+      }
+<span class="fc" id="L98">      state = States.FLEEING;</span>
+<span class="fc" id="L99">      navigateToFurthestPointFromPlayer(world);</span>
+<span class="fc" id="L100">      npcTimer.scheduleTask(new Task() {</span>
+        @Override
+        public void run() {
+<span class="nc bnc" id="L103" title="All 2 branches missed.">          if (exposed) {</span>
+<span class="nc" id="L104">            fireProjectileAtPlayer(world);</span>
+          } else {
+<span class="nc" id="L106">            cancel();</span>
+          }
+<span class="nc" id="L108">        }</span>
+      }, world.INFILTRATOR_FIRING_INTERVAL, world.INFILTRATOR_FIRING_INTERVAL);
+    } else {
+<span class="fc" id="L111">      position.x = Utils.randomFloatInRange(world.randomNumberGenerator,</span>
+          World.BRIG_BOUNDS[0][0], World.BRIG_BOUNDS[1][0]);
+<span class="fc" id="L113">      position.y = Utils.randomFloatInRange(world.randomNumberGenerator,</span>
+          World.BRIG_BOUNDS[0][1], World.BRIG_BOUNDS[1][1]);
+<span class="fc" id="L115">      aiEnabled = false;    </span>
+    }
+<span class="fc" id="L117">  }</span>
+
+  /**
+   * Attack a system nearby to the infiltrator.
+   * */
+  private void attackNearbySystem(final World world) {
+<span class="fc" id="L123">    state = States.ATTACKING_SYSTEM;</span>
+
+    // Buffs are now spawned here due to glitch with different difficulties
+    //Gdx.app.log(&quot;system&quot;, &quot;attack&quot;);
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">    if (!world.demoMode) {</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">      for (int i = 0; i &lt; world.BUFFS_ON_ATTACK; i++) {</span>
+        //Gdx.app.log(&quot;buff&quot;, &quot;spawn buff&quot;);
+<span class="fc" id="L130">        world.spawnBuff();</span>
+      }
+    }
+    //Gdx.app.log(&quot;system&quot;, &quot;attacked&quot;);
+
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L136">      final RectangleMapObject system = getNearbyObjects(World.map);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">      if (system != null) {</span>
+<span class="nc" id="L138">        world.updateSystemState(system.getRectangle().getX(), system.getRectangle().getY(),</span>
+                World.SystemStates.ATTACKED);
+
+<span class="nc" id="L141">        npcTimer.scheduleTask(new Task() {</span>
+          @Override
+          public void run() {
+<span class="nc bnc" id="L144" title="All 2 branches missed.">            if (aiEnabled) {</span>
+<span class="nc" id="L145">              world.updateSystemState(system.getRectangle().getX(), system.getRectangle().getY(),</span>
+                      World.SystemStates.DESTROYED);
+<span class="nc" id="L147">              navigateToRandomSystem(world);</span>
+            }
+<span class="nc" id="L149">          }</span>
+        }, World.SYSTEM_BREAK_TIME);
+      }
+    }
+<span class="fc" id="L153">  }</span>
+
+  @Override
+  public void navigateToNearestFleepoint(final World world) {
+<span class="nc bnc" id="L157" title="All 2 branches missed.">    if (aiEnabled) {</span>
+<span class="nc bnc" id="L158" title="All 2 branches missed.">      if (state == States.ATTACKING_SYSTEM) {</span>
+<span class="nc" id="L159">        RectangleMapObject system = getNearbyObjects(World.map);</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        if (system != null) {</span>
+<span class="nc" id="L161">          Rectangle boundingBox = system.getRectangle();</span>
+<span class="nc" id="L162">          world.updateSystemState(boundingBox.x, boundingBox.y, World.SystemStates.WORKING);  </span>
+        }
+      }
+<span class="nc" id="L165">      super.navigateToNearestFleepoint(world);</span>
+    }
+<span class="nc" id="L167">  }</span>
+
+  private boolean playerNearby(World world) {
+<span class="nc bnc" id="L170" title="All 2 branches missed.">    if (world.demoMode) {</span>
+<span class="nc" id="L171">      return false;</span>
+    }
+<span class="nc" id="L173">    Circle infiltratorSight = new Circle(position, World.INFILTRATOR_SIGHT_RANGE);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">    if (infiltratorSight.contains(world.player.position)) {</span>
+<span class="nc" id="L175">      return true;</span>
+    }
+<span class="nc" id="L177">    return false;</span>
+  }
+
+  private void fireProjectileAtPlayer(World world) {
+<span class="fc" id="L181">    Vector2 projectileVelocity = new Vector2(world.player.position.x - position.x,</span>
+                                             world.player.position.y - position.y);
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">    if (world.player.invisible) {</span>
+<span class="nc" id="L184">      Random rng = new Random();</span>
+<span class="nc" id="L185">      projectileVelocity = new Vector2((float) rng.nextInt(100),</span>
+<span class="nc" id="L186">              (float) rng.nextInt(100));</span>
+    }
+<span class="fc" id="L188">    projectileVelocity.setLength(World.INFILTRATOR_PROJECTILE_SPEED);</span>
+<span class="fc" id="L189">    Projectile projectile = new Projectile(getCenterX(), getCenterY(), projectileVelocity, this,</span>
+<span class="fc" id="L190">        Projectile.CollisionActions.randomAction(), world);</span>
+<span class="fc" id="L191">    world.queueEntityAdd(projectile);</span>
+<span class="fc" id="L192">  }</span>
+
+  /**
+   * Only use for testing, calls private function attackNearbySystem()
+   * @param world
+   */
+  public void virtualAttackSystem(World world) {
+<span class="fc" id="L199">    attackNearbySystem(world);</span>
+<span class="fc" id="L200">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

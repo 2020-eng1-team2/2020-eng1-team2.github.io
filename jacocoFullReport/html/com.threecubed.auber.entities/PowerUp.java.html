@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PowerUp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.entities</a> &gt; <span class="el_source">PowerUp.java</span></div><h1>PowerUp.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.entities;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.math.Vector2;
+import com.threecubed.auber.Abilities;
+import com.threecubed.auber.Utils;
+import com.threecubed.auber.World;
+
+/**
+ * The power up entity that applies buffs to the player. Activated in {@link Player}
+ *
+ * */
+public class PowerUp extends GameEntity {
+
+    private final Abilities ability;
+
+<span class="pc" id="L18">    private boolean beginTimer = false;</span>
+<span class="pc" id="L19">    private boolean pickup = true;</span>
+
+    public transient World world;
+
+<span class="pc" id="L23">    private float time = 0f;</span>
+    private float countdown;
+
+    /**
+     * Initialises a power up
+     *
+     * @param x x-coord of power up
+     * @param y y-coord of power up
+     * @param world The game's world
+     * @param ability The ability the power up is to grant
+     * */
+    public PowerUp(float x, float y, World world, Abilities ability) {
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">        super(x, y, Gdx.app.getType() == Application.ApplicationType.HeadlessDesktop</span>
+<span class="fc" id="L36">                ? Utils.createMockSprite(14, 14)</span>
+<span class="nc" id="L37">                : World.atlas.createSprite(</span>
+<span class="nc" id="L38">                ability.toString()));</span>
+<span class="fc" id="L39">        this.ability = ability;</span>
+<span class="fc" id="L40">        this.world = world;</span>
+<span class="fc" id="L41">        position = new Vector2(x, y);</span>
+<span class="fc" id="L42">        this.countdown = world.AUBER_BUFF_TIME;</span>
+<span class="fc" id="L43">    }</span>
+
+    /**
+     * This constructor is necessary for save-loading to work.
+     * It should NEVER be used directly by a human!
+     */
+    public PowerUp() {
+        // Set a random ability here, then when we've been deserialized we'll replace the sprite
+<span class="nc" id="L51">        super(</span>
+                0f,
+                0f,
+<span class="nc bnc" id="L54" title="All 2 branches missed.">                Gdx.app.getType() == Application.ApplicationType.HeadlessDesktop</span>
+<span class="nc" id="L55">                        ? Utils.createMockSprite(14, 14)</span>
+<span class="nc" id="L56">                        : World.atlas.createSprite(Abilities.randomAbility().toString())</span>
+        );
+<span class="nc" id="L58">        this.ability = Abilities.randomAbility();</span>
+<span class="nc" id="L59">    }</span>
+
+    public void recreateSprite() {
+<span class="nc" id="L62">        this.sprite = World.atlas.createSprite(this.ability.toString());</span>
+<span class="nc" id="L63">    }</span>
+
+    /**
+     * Ensures the power up is active throughout its duration.
+     *
+     * @param world The game's world
+     * */
+    @Override
+    public void update(World world) {
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (beginTimer) {</span>
+<span class="fc" id="L73">            time += Gdx.graphics.getDeltaTime();</span>
+            // This is in update so that when 2 of the same buffs are active, they won't end when the first one does
+<span class="pc bpc" id="L75" title="2 of 6 branches missed.">            switch (this.ability) {</span>
+                case Invisibility:
+<span class="fc" id="L77">                    this.world.player.invisible = true;</span>
+<span class="fc" id="L78">                    break;</span>
+                case Invincibility:
+<span class="fc" id="L80">                    this.world.player.invincible = true;</span>
+<span class="fc" id="L81">                    break;</span>
+                case SuperSpeed:
+<span class="fc" id="L83">                    this.world.player.superspeed = true;</span>
+<span class="fc" id="L84">                    break;</span>
+                case Vision:
+<span class="fc" id="L86">                    this.world.player.vision = true;</span>
+<span class="fc" id="L87">                    this.world.player.oneTimeVision = true;</span>
+<span class="fc" id="L88">                    break;</span>
+                case InstaBeam:
+<span class="nc" id="L90">                    this.world.player.insta_beam = true;</span>
+                    break;
+            }
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">            if (time &gt; countdown) {</span>
+<span class="nc" id="L94">                removeBuff();</span>
+            }
+        }
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (!canPickup()) {</span>
+<span class="fc" id="L98">            this.sprite.setAlpha(0f);</span>
+        }
+<span class="fc" id="L100">    }</span>
+
+    /**
+     * Returns the ability in string form
+     *
+     * @return The ability of the power up
+     * */
+    public Abilities getAbility() {
+<span class="nc" id="L108">        return this.ability;</span>
+    }
+
+    /**
+     * Returns the position of the power up in a Vector2
+     *
+     * @return The position of the power up
+     * */
+    public Vector2 getPosition() {
+<span class="nc" id="L117">        return super.position;</span>
+    }
+
+    /**
+     * Begins timer, activates power up and hides the sprite from the player
+     * */
+    public void applyBuff() {
+        // Start 10 sec timer, then remove after
+<span class="fc" id="L125">        this.beginTimer = true;</span>
+<span class="fc" id="L126">        this.pickup = false;</span>
+<span class="fc" id="L127">        Gdx.app.log(&quot;timer&quot;, &quot;start &quot; + ability);</span>
+<span class="fc" id="L128">    }</span>
+
+    /**
+     * Deactivates this power up and removes it from the Entity List in world
+     * */
+    public void removeBuff() {
+<span class="nc" id="L134">        Gdx.app.log(&quot;timer&quot;, &quot;finished, removing buff &quot; + ability);</span>
+<span class="nc bnc" id="L135" title="All 6 branches missed.">        switch (this.ability) {</span>
+            case Invisibility:
+<span class="nc" id="L137">                this.world.player.invisible = false;</span>
+<span class="nc" id="L138">                break;</span>
+            case Invincibility:
+<span class="nc" id="L140">                this.world.player.invincible = false;</span>
+<span class="nc" id="L141">                break;</span>
+            case SuperSpeed:
+<span class="nc" id="L143">                this.world.player.superspeed = false;</span>
+<span class="nc" id="L144">                break;</span>
+            case Vision:
+<span class="nc" id="L146">                this.world.player.vision = false;</span>
+<span class="nc" id="L147">                break;</span>
+            case InstaBeam:
+<span class="nc" id="L149">                this.world.player.insta_beam = false;</span>
+                break;
+        }
+<span class="nc" id="L152">        this.world.queueEntityRemove(this);</span>
+<span class="nc" id="L153">    }</span>
+
+    /**
+     * Returns the objects canPickup bool (used to detect if the player has already picked it up)
+     *
+     * @return Whether the power up can be picked up
+     * */
+    public boolean canPickup() {
+<span class="fc" id="L161">        return this.pickup;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

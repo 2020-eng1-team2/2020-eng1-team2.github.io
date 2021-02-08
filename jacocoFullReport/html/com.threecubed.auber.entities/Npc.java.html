@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Npc.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.entities</a> &gt; <span class="el_source">Npc.java</span></div><h1>Npc.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.entities;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.Timer.Task;
+import com.threecubed.auber.Utils;
+import com.threecubed.auber.World;
+import com.threecubed.auber.pathfinding.NavigationMesh;
+import java.util.ArrayList;
+import java.util.Random;
+
+
+/**
+ * Npc is the class from which all AI controlled {@link GameEntity}s must extend.
+ * It contains the code that allows for those entities to interact with the
+ * {@link NavigationMesh} in the pathfinding package, along with handling the
+ * state of an entity
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public abstract class Npc extends GameEntity {
+<span class="fc" id="L29">  private ArrayList&lt;Vector2&gt; currentPath = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L30">  private Vector2 targetDirection = new Vector2();</span>
+  private final transient NavigationMesh navigationMesh;
+
+<span class="fc" id="L33">  protected float maxSpeed = 0.8f;</span>
+
+<span class="fc" id="L35">  private static final transient String[] textureNames = {&quot;alienA&quot;, &quot;alienB&quot;, &quot;alienC&quot;};</span>
+
+<span class="fc" id="L37">  protected States state = States.IDLE;</span>
+
+<span class="fc" id="L39">  public enum States {</span>
+<span class="fc" id="L40">    IDLE,</span>
+<span class="fc" id="L41">    NAVIGATING,</span>
+<span class="fc" id="L42">    REACHED_DESTINATION,</span>
+<span class="fc" id="L43">    FLEEING,</span>
+<span class="fc" id="L44">    ATTACKING_SYSTEM,</span>
+  }
+
+<span class="fc" id="L47">  public boolean aiEnabled = true;</span>
+<span class="fc" id="L48">  protected transient Timer npcTimer = new Timer();</span>
+
+  /**
+   * Initialise an NPC with a given texture.
+   *
+   * @param x The x coordinate to initialise the NPC at
+   * @param y The y coordinate to initialise the NPC at
+   * @param sprite The NPC sprite
+   * @param navigationMesh The navigation mesh.
+   * */
+  public Npc(float x, float y, Sprite sprite, NavigationMesh navigationMesh) {
+<span class="fc" id="L59">    super(x, y, sprite);</span>
+<span class="fc" id="L60">    Random rng = new Random(); // TODO: Switch to use the world RNG</span>
+<span class="fc" id="L61">    maxSpeed *= Utils.randomFloatInRange(rng, World.NPC_SPEED_VARIANCE[0],</span>
+        World.NPC_SPEED_VARIANCE[1]);
+<span class="fc" id="L63">    this.navigationMesh = navigationMesh;</span>
+<span class="fc" id="L64">  }</span>
+
+  /**
+   * Initialise an NPC with a random NPC sprite.
+   *
+   * @param x The x coordinate to initialise the NPC at
+   * @param y The y coordinate to initialise the NPC at
+   * */
+  public Npc(float x, float y) {
+<span class="fc" id="L73">    this(x, y,</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            Gdx.app.getType() == Application.ApplicationType.HeadlessDesktop</span>
+<span class="fc" id="L75">                    ? Utils.createMockSprite(14, 14)</span>
+<span class="pc" id="L76">                    : World.atlas.createSprite(</span>
+                        textureNames[
+<span class="nc" id="L78">                                Utils.randomIntInRange(</span>
+                                        World.randomNumberGenerator,
+                                        0,
+                                        textureNames.length - 1
+                                )
+                        ]),
+        World.navigationMesh
+    );
+<span class="fc" id="L86">  }</span>
+
+  /**
+   * Initialise the NPC at a random location.
+   *
+   * @param world The game world
+   * */
+  public Npc(World world) {
+<span class="fc" id="L94">    this(0f, 0f);</span>
+<span class="fc" id="L95">    moveToRandomLocation(world);</span>
+<span class="fc" id="L96">  }</span>
+
+  public Npc() {
+<span class="nc" id="L99">    this(0f, 0f);</span>
+<span class="nc" id="L100">  }</span>
+
+  /**
+   * Update the NPC by stepping it in the direction of its current target.
+   *
+   * @param world The game world
+   * */
+  protected void stepTowardsTarget(World world) {
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">    if (aiEnabled) {</span>
+<span class="fc" id="L109">      Vector2 targetCoordinates = currentPath.get(0);</span>
+<span class="fc" id="L110">      Vector2 currentDirection = getCurrentDirection();</span>
+
+      // Rotate the entity to face the direction its heading
+<span class="fc" id="L113">      rotation = currentDirection.angleDeg();</span>
+
+<span class="fc" id="L115">      boolean entityMoved = false;</span>
+<span class="pc bpc" id="L116" title="2 of 4 branches missed.">      if (currentDirection.x == targetDirection.x &amp;&amp; targetDirection.x != 0) {</span>
+<span class="fc" id="L117">        float velocityX = Math.signum(targetCoordinates.x - position.x) * maxSpeed;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (state == States.FLEEING) {</span>
+<span class="nc" id="L119">          velocityX *= World.NPC_FLEE_MULTIPLIER;</span>
+        }
+<span class="fc" id="L121">        position.x += velocityX;</span>
+<span class="fc" id="L122">        entityMoved = true;</span>
+      }
+
+<span class="pc bpc" id="L125" title="2 of 4 branches missed.">      if (currentDirection.y == targetDirection.y &amp;&amp; targetDirection.y != 0) {</span>
+<span class="nc" id="L126">        float velocityY = Math.signum(targetCoordinates.y - position.y) * maxSpeed;</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (state == States.FLEEING) {</span>
+<span class="nc" id="L128">          velocityY *= World.NPC_FLEE_MULTIPLIER;</span>
+        }
+<span class="nc" id="L130">        position.y += velocityY;</span>
+<span class="nc" id="L131">        entityMoved = true;</span>
+      }
+
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">      if (!entityMoved) {</span>
+        // If the entity hasn't moved, it must have reached its target node.
+        // Remove the node and recalculate the current direction to head in.
+<span class="nc" id="L137">        currentPath.remove(0);</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        if (!currentPath.isEmpty()) {</span>
+<span class="nc" id="L139">          targetDirection = getCurrentDirection();</span>
+        } else {
+<span class="nc" id="L141">          state = States.REACHED_DESTINATION;</span>
+        }
+      }
+    }
+<span class="fc" id="L145">  }</span>
+
+  /**
+   * Navigate to the furthest point from the player.
+   *
+   * @param world The game world
+   * */
+  public void navigateToFurthestPointFromPlayer(World world) {
+<span class="fc" id="L153">    Vector2 furthestPoint = navigationMesh.getFurthestPointFromEntity(world.player);</span>
+<span class="fc" id="L154">    currentPath = navigationMesh.generateWorldPathToPoint(position, furthestPoint);</span>
+<span class="fc" id="L155">  }</span>
+
+  /**
+   * Control the state the NPC is in and fire any necessary events when need be.
+   *
+   * @param world The game world
+   * */
+  @Override
+  public void update(World world) {
+<span class="fc bfc" id="L164" title="All 2 branches covered.">    if (aiEnabled) {</span>
+<span class="pc bpc" id="L165" title="3 of 4 branches missed.">      switch (state) {</span>
+        case NAVIGATING:
+        case FLEEING:
+<span class="fc" id="L168">          stepTowardsTarget(world);</span>
+<span class="fc" id="L169">          break;</span>
+        case REACHED_DESTINATION:
+<span class="nc" id="L171">          handleDestinationReached(world);</span>
+<span class="nc" id="L172">          break;</span>
+        case IDLE:
+<span class="nc" id="L174">          break;</span>
+        default:
+          break;
+      }
+    }
+<span class="fc" id="L179">  }</span>
+
+  /**
+   * Update the {@link Npc#currentPath} to a given set of x and y coordinates.
+   *
+   * @param x The x coordinate to navigate to
+   * @param y The y coordinate to navigate to
+   * @param world The game world
+   * */
+  public void updatePath(float x, float y, World world) {
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">    if (!currentPath.isEmpty()) {</span>
+<span class="nc" id="L190">      currentPath.clear();</span>
+    }
+<span class="fc" id="L192">    currentPath = navigationMesh.generateWorldPathToPoint(position, new Vector2(x, y));</span>
+<span class="fc" id="L193">    targetDirection = getCurrentDirection();</span>
+<span class="fc" id="L194">  }</span>
+
+  /**
+   * Pick a random system in the game world and navigate towards it.
+   *
+   * @param world The game world
+   * */
+
+  protected void navigateToRandomSystem(World world) {
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">    if (!world.systems.isEmpty()) {</span>
+<span class="fc" id="L204">      state = States.NAVIGATING;</span>
+<span class="fc" id="L205">      RectangleMapObject system = world.systems.get(</span>
+<span class="fc" id="L206">          Utils.randomIntInRange(world.randomNumberGenerator,</span>
+<span class="fc" id="L207">            0, world.systems.size() - 1));</span>
+
+<span class="fc" id="L209">      updatePath(system.getRectangle().getX(), system.getRectangle().getY(), world);</span>
+    }
+<span class="fc" id="L211">  }</span>
+
+  /**
+   * Handle the event of the NPC reaching its current destination. For {@link Infiltrator}s this
+   * might be to sabotage a system and for {@link Civilian}s this might be to idle for a bit
+   *
+   * @param world The game world
+   * */
+  public abstract void handleDestinationReached(World world);
+
+  /**
+   * Handle the event of being shot with Auber's teleporting ray gun.
+   *
+   * @param world The game world
+   * */
+  public abstract void handleTeleporterShot(World world);
+
+  /**
+   * Return a {@link Vector2} representing the direction the NPC is currently heading in.
+   *
+   * @return A {@link Vector2} representing the direction the NPC is currently heading in.
+   * */
+  public Vector2 getCurrentDirection() {
+<span class="fc" id="L234">    return new Vector2(</span>
+<span class="fc" id="L235">        Math.signum(currentPath.get(0).x - position.x),</span>
+<span class="fc" id="L236">        Math.signum(currentPath.get(0).y - position.y)</span>
+        );
+  }
+
+  protected void idleForGivenTime(final World world, float seconds) {
+<span class="fc" id="L241">    npcTimer.scheduleTask(new Task() {</span>
+      @Override
+      public void run() {
+<span class="nc bnc" id="L244" title="All 2 branches missed.">        if (aiEnabled) {</span>
+<span class="nc" id="L245">          state = States.NAVIGATING;</span>
+
+          // Pick new system to navigate to
+<span class="nc" id="L248">          navigateToRandomSystem(world);</span>
+        }
+<span class="nc" id="L250">      }</span>
+    }, seconds);
+<span class="fc" id="L252">  }</span>
+
+  /**
+   * Create a path to the nearest flee point (euclidian) for the NPC to flee to.
+   *
+   * @param world The game world
+   * */
+  public void navigateToNearestFleepoint(final World world) {
+<span class="nc" id="L260">    state = States.FLEEING;</span>
+
+<span class="nc" id="L262">    ArrayList&lt;Float&gt; distances = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L263">    ArrayList&lt;float[]&gt; closestFleePoints = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L265">    Circle minimumFleeRange = new Circle(position, World.NPC_MIN_FLEE_DISTANCE);</span>
+
+<span class="nc bnc" id="L267" title="All 2 branches missed.">    for (float[] fleePoint : world.fleePoints) {</span>
+<span class="nc" id="L268">      float newDistance = NavigationMesh.getEuclidianDistance(fleePoint,</span>
+                                                           new float[] {position.x, position.y});
+
+<span class="nc bnc" id="L271" title="All 2 branches missed.">      if (!minimumFleeRange.contains(fleePoint[0], fleePoint[1])) {</span>
+<span class="nc bnc" id="L272" title="All 2 branches missed.">        if (distances.size() &lt; 2) {</span>
+<span class="nc" id="L273">          distances.add(newDistance);</span>
+<span class="nc" id="L274">          closestFleePoints.add(fleePoint);</span>
+<span class="nc" id="L275">          continue;</span>
+        }
+<span class="nc bnc" id="L277" title="All 2 branches missed.">        for (int i = 0; i &lt; distances.size(); i++) {</span>
+<span class="nc" id="L278">          float distance = distances.get(i);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">          if (newDistance &lt; distance) {</span>
+<span class="nc" id="L280">            distances.set(i, distance);</span>
+<span class="nc" id="L281">            closestFleePoints.set(i, fleePoint);</span>
+<span class="nc" id="L282">            break;</span>
+          }
+        }
+      }
+<span class="nc" id="L286">    }</span>
+<span class="nc" id="L287">    float[] chosenFleePoint = closestFleePoints.get(Utils.randomIntInRange(</span>
+<span class="nc" id="L288">      world.randomNumberGenerator, 0, closestFleePoints.size() - 1)</span>
+    );
+
+<span class="nc" id="L291">    currentPath = navigationMesh.generateWorldPathToPoint(</span>
+        position,
+        new Vector2(chosenFleePoint[0], chosenFleePoint[1])
+        );
+
+    // Fleeing takes priority over all tasks
+<span class="nc" id="L297">    npcTimer.clear();</span>
+<span class="nc" id="L298">    npcTimer.scheduleTask(new Task() {</span>
+      @Override
+      public void run() {
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if (aiEnabled) {</span>
+<span class="nc" id="L302">          state = States.NAVIGATING;</span>
+<span class="nc" id="L303">          navigateToRandomSystem(world);</span>
+        }
+<span class="nc" id="L305">      }</span>
+    }, World.NPC_FLEE_TIME);
+<span class="nc" id="L307">  }</span>
+
+  public States getState() {
+<span class="fc" id="L310">    return state;</span>
+  }
+
+  /**
+   * Move the entity to a random location within the world.
+   *
+   * @param world The game world
+   **/
+  public void moveToRandomLocation(World world) {
+<span class="fc" id="L319">    float[] location = world.spawnLocations.get(Utils.randomIntInRange(</span>
+        world.randomNumberGenerator, 0,
+<span class="fc" id="L321">        world.spawnLocations.size() - 1));</span>
+<span class="fc" id="L322">    position.x = location[0];</span>
+<span class="fc" id="L323">    position.y = location[1];</span>
+<span class="fc" id="L324">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

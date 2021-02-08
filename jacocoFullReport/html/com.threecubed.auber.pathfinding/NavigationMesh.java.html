@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NavigationMesh.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.pathfinding</a> &gt; <span class="el_source">NavigationMesh.java</span></div><h1>NavigationMesh.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.pathfinding;
+
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.math.Vector2;
+import com.threecubed.auber.entities.GameEntity;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.PriorityQueue;
+
+
+/**
+ * The NavigationMesh class is a wrapper around a 2d array of {@link Boolean}s representing which
+ * tiles within the game world are accessible. It reads in a {@link TiledMapTileLayer} in order to
+ * produce this array of booleans. If a given set of coordinates do not have a tile, it is
+ * considered inaccessible. For this reason, the background layer of the map is used as the input
+ * for the navigation mesh.
+ * The class also contains functions required to facilitate A* pathfinding which entities that
+ * inherit from Npc make use of.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class NavigationMesh {
+  private boolean[][] mesh;
+  TiledMapTileLayer navigationLayer;
+
+  /**
+   * Produce a navigation mesh from a given {@link TiledMapTileLayer}.
+   * This works by iterating over the given layer and appending either true or false to the mesh
+   * based upon whether a tile is present at the current coordinates
+   *
+   * @param navigationLayer The layer to produce a navigation mesh from
+   * */
+<span class="fc" id="L38">  public NavigationMesh(TiledMapTileLayer navigationLayer) {</span>
+<span class="fc" id="L39">    this.navigationLayer = navigationLayer;</span>
+
+<span class="fc" id="L41">    mesh = new boolean[navigationLayer.getHeight()][navigationLayer.getWidth()];</span>
+
+<span class="fc bfc" id="L43" title="All 2 branches covered.">    for (int y = 0; y &lt; navigationLayer.getHeight(); y++) {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">      for (int x = 0; x &lt; navigationLayer.getWidth(); x++) {</span>
+<span class="fc" id="L45">        Cell currentCell = navigationLayer.getCell(x, y);</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        setCell(x, y, currentCell == null ? false : true);</span>
+      }
+    }
+<span class="fc" id="L49">  }</span>
+
+  /**
+   * Setter for the {@link NavigationMesh#mesh} variable that flips the x and y values
+   * so that the x and y values don't need to be flipped when accessing the array.
+   *
+   * @param x The x coordinate of the cell to set
+   * @param y The y coordinate of the cell to set
+   * @param value The value to set the cell to
+   * */
+  public void setCell(int x, int y, boolean value) {
+<span class="fc" id="L60">    mesh[y][x] = value;</span>
+<span class="fc" id="L61">  }</span>
+
+  /**
+   * Getter for {@link NavigationMesh#mesh} that returns whether a cell at given coordinates
+   * is accessible.
+   *
+   * @param x The x coordinate to test
+   * @param y The y coordinate to test
+   *
+   * @return A boolean representing whether the chosen cell is accessible
+   * */
+  public boolean cellAccessible(int x, int y) {
+<span class="fc" id="L73">    return mesh[y][x];</span>
+  }
+
+  /**
+   * Return the coordinates of the tile in the actual game world.
+   *
+   * @param x The x coordinate to convert 
+   * @param y The y coordinate to convert
+   *
+   * @return A {@link Vector2} of converted coordinates
+   * */
+  public Vector2 getWorldCoordinates(int x, int y) {
+<span class="fc" id="L85">    return new Vector2((float) x * navigationLayer.getTileWidth(),</span>
+<span class="fc" id="L86">                       (float) y * navigationLayer.getTileHeight());</span>
+  }
+
+  public int[] getTilemapCoordinates(float x, float y) {
+<span class="fc" id="L90">    return new int[] {(int) Math.floor(x / navigationLayer.getTileWidth()),</span>
+<span class="fc" id="L91">                      (int) Math.floor(y / navigationLayer.getTileHeight())};</span>
+  }
+
+  /**
+   * Return an {@link ArrayList} of all {@link PathNode}s surrounding a point.
+   *
+   * @param node The PathNode to find successors for
+   * @param destination The target destination of the pathfinding algorithm
+   *
+   * @return An {@link ArrayList} of {@link PathNode}s of possible moves that the npc could make
+   * */
+  public ArrayList&lt;PathNode&gt; getSuccessorNodes(PathNode node, int[] destination) {
+<span class="fc" id="L103">    int[][] surroundingCoordinates = {</span>
+        {0, -1},
+        {-1, 0}, {1, 0},
+        {0, 1}
+      };
+
+<span class="fc" id="L109">    int[][] diagonalCoordinates = {</span>
+        {-1, -1}, {1, -1},
+        {-1, 1}, {1, 1}
+      };
+
+<span class="fc" id="L114">    ArrayList&lt;PathNode&gt; output = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">    for (int[] coordinates : surroundingCoordinates) {</span>
+<span class="fc" id="L116">      int targetX = node.position[0] + coordinates[0];</span>
+<span class="fc" id="L117">      int targetY = node.position[1] + coordinates[1];</span>
+
+<span class="pc bpc" id="L119" title="1 of 8 branches missed.">      if (targetX &gt; 0 &amp;&amp; targetX &lt; mesh[0].length - 1</span>
+          &amp;&amp; targetY &gt; 0 &amp;&amp; targetY &lt; mesh.length - 1
+<span class="fc bfc" id="L121" title="All 2 branches covered.">          &amp;&amp; cellAccessible(targetX, targetY)) {</span>
+<span class="fc" id="L122">        output.add(new PathNode(new int[] {targetX, targetY}, node, destination));</span>
+      }
+    }
+<span class="fc bfc" id="L125" title="All 2 branches covered.">    for (int[] coordinates : diagonalCoordinates) {</span>
+<span class="fc" id="L126">      int targetX = node.position[0] + coordinates[0];</span>
+<span class="fc" id="L127">      int targetY = node.position[1] + coordinates[1];</span>
+
+      // Coordinates of cells that must also be empty to make a diagonal move.
+      // Example:
+      // -------
+      // | |A|T|  To make a move to target cell T,
+      // -------  cells A and B must both be free.
+      // | |.|B|
+      // -------
+      // | | | |
+      // -------
+
+<span class="pc bpc" id="L139" title="1 of 8 branches missed.">      if (targetX &gt; 0 &amp;&amp; targetX &lt; mesh[0].length - 1</span>
+          &amp;&amp; targetY &gt; 0 &amp;&amp; targetY &lt; mesh.length - 1
+<span class="fc bfc" id="L141" title="All 2 branches covered.">          &amp;&amp; cellAccessible(targetX, targetY)</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">          &amp;&amp; cellAccessible(node.position[0], targetY)</span>
+<span class="fc bfc" id="L143" title="All 2 branches covered.">          &amp;&amp; cellAccessible(targetX, node.position[1])) {</span>
+<span class="fc" id="L144">        output.add(new PathNode(new int[] {targetX, targetY}, node, destination));</span>
+      }
+    }
+<span class="fc" id="L147">    return output;</span>
+  }
+
+  /**
+   * Generate a path in terms of tilemap coordinates to a given tile.
+   *
+   * @param start The point to start at
+   * @param destination The point to pathfind to
+   *
+   * @return An {@link ArrayList} of points representing a path between the 2 given coordinates
+   * */
+  public ArrayList&lt;int[]&gt; generateTilemapPathToPoint(final int[] start, final int[] destination) {
+<span class="fc" id="L159">    ArrayList&lt;int[]&gt; path = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L161">    PathNode startNode = new PathNode(start, null, destination);</span>
+
+<span class="fc" id="L163">    Comparator&lt;PathNode&gt; distanceComparator = new Comparator&lt;PathNode&gt;() {</span>
+      @Override
+      public int compare(PathNode firstPoint, PathNode secondPoint) {
+<span class="fc" id="L166">        return (int) (firstPoint.heuristic * 1000) - (int) (secondPoint.heuristic * 1000);</span>
+      }
+    };
+
+<span class="fc" id="L170">    PriorityQueue&lt;PathNode&gt; openNodes = new PriorityQueue&lt;&gt;(distanceComparator);</span>
+<span class="fc" id="L171">    openNodes.add(startNode);</span>
+
+<span class="fc" id="L173">    ArrayList&lt;PathNode&gt; closedNodes = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">    while (!openNodes.isEmpty()) {</span>
+<span class="fc" id="L176">      PathNode currentNode = openNodes.remove();</span>
+<span class="fc" id="L177">      ArrayList&lt;PathNode&gt; successorNodes = getSuccessorNodes(currentNode, destination);</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">      for (PathNode successor : successorNodes) {</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (Arrays.equals(successor.position, destination)) {</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">          while (successor.parent != null) {</span>
+<span class="fc" id="L181">            path.add(successor.position);</span>
+<span class="fc" id="L182">            successor = successor.parent;</span>
+          }
+<span class="fc" id="L184">          Collections.reverse(path);</span>
+<span class="fc" id="L185">          return path;</span>
+<span class="fc bfc" id="L186" title="All 4 branches covered.">        } else if (!closedNodes.contains(successor) &amp;&amp; !openNodes.contains(successor)) {</span>
+<span class="fc" id="L187">          openNodes.add(successor);</span>
+        }
+<span class="fc" id="L189">      }</span>
+<span class="fc" id="L190">      closedNodes.add(currentNode);</span>
+<span class="fc" id="L191">    }</span>
+<span class="nc" id="L192">    throw new IllegalArgumentException(&quot;No path between the 2 given points could be found&quot;);</span>
+  }
+
+  /**
+   * Generate a path to a point in terms of real world coordinates as opposed to tilemap
+   * coordinates.
+   *
+   * @param start A {@link Vector2} representing the start position
+   * @param destination A {@link Vector2} representing the end position
+   *
+   * @return An {@link ArrayList} of {@link Vector2}s that represent a path to the requested point
+   * */
+  public ArrayList&lt;Vector2&gt; generateWorldPathToPoint(Vector2 start, Vector2 destination) {
+<span class="fc" id="L205">    int[] startTile = {(int) start.x / navigationLayer.getTileWidth(),</span>
+<span class="fc" id="L206">                       (int) start.y / navigationLayer.getTileHeight()};</span>
+
+<span class="fc" id="L208">    int[] destinationTile = {(int) destination.x / navigationLayer.getTileWidth(),</span>
+<span class="fc" id="L209">                             (int) destination.y / navigationLayer.getTileHeight()};</span>
+
+<span class="fc" id="L211">    ArrayList&lt;int[]&gt; tilemapPath = generateTilemapPathToPoint(startTile, destinationTile);</span>
+<span class="fc" id="L212">    ArrayList&lt;Vector2&gt; worldPath = new ArrayList&lt;&gt;();</span>
+
+<span class="fc bfc" id="L214" title="All 2 branches covered.">    for (int[] node : tilemapPath) {</span>
+<span class="fc" id="L215">      worldPath.add(new Vector2(node[0] * navigationLayer.getTileWidth(),</span>
+<span class="fc" id="L216">                                node[1] * navigationLayer.getTileHeight()));</span>
+<span class="fc" id="L217">    }</span>
+<span class="fc" id="L218">    worldPath.add(destination);</span>
+
+<span class="fc" id="L220">    return worldPath;</span>
+  }
+
+  /**
+   * Get the coordinates of the furthest point from the given entity.
+   *
+   * @param entity The entity to find the furthest point from
+   * @return The world coordinates of the furthest point from this entity
+   * */
+  public Vector2 getFurthestPointFromEntity(GameEntity entity) {
+<span class="fc" id="L230">    int[] tileCoordinates = getTilemapCoordinates(entity.position.x, entity.position.y);</span>
+<span class="fc" id="L231">    float longestDistance = 0;</span>
+<span class="fc" id="L232">    int[] longestDistanceCoordinates = {0, 0};</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">    for (int y = 0; y &lt; mesh.length; y++) {</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">      for (int x = 0; x &lt; mesh[0].length; x++) {</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (cellAccessible(x, y)) {</span>
+<span class="fc" id="L236">          int[] currentCellCoords = {x, y};</span>
+<span class="fc" id="L237">          float distance = getEuclidianDistance(tileCoordinates, currentCellCoords);</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">          if (distance &gt; longestDistance) {</span>
+<span class="fc" id="L239">            longestDistance = distance;</span>
+<span class="fc" id="L240">            longestDistanceCoordinates = currentCellCoords;</span>
+          }
+        }
+      }
+    }
+<span class="fc" id="L245">    return getWorldCoordinates(longestDistanceCoordinates[0], longestDistanceCoordinates[1]);</span>
+  }
+
+  /**
+   * Return the euclidian distance between 2 float arrays (world coordinates).
+   *
+   * @param firstPoint The first point to test from
+   * @param secondPoint The second point to test from
+   *
+   * @return The euclidian distance between the 2 points
+   * */
+  public static float getEuclidianDistance(float[] firstPoint, float[] secondPoint) {
+<span class="fc" id="L257">    float horizontalDistance = secondPoint[0] - firstPoint[0];</span>
+<span class="fc" id="L258">    float verticalDistance = secondPoint[1] - firstPoint[1];</span>
+<span class="fc" id="L259">    return (float) Math.sqrt(Math.pow(horizontalDistance, 2) + Math.pow(verticalDistance, 2));</span>
+  }
+
+  /**
+   * Return the euclidian distance between 2 integer arrays (tilemap coordinates).
+   *
+   * @param firstPoint The first point to test from
+   * @param secondPoint The second point to test from
+   *
+   * @return The euclidian distance between the 2 points
+   * */
+  public static float getEuclidianDistance(int[] firstPoint, int[] secondPoint) {
+<span class="fc" id="L271">    float[] convertedFirstPoint = {(float) firstPoint[0], (float) firstPoint[1]};</span>
+<span class="fc" id="L272">    float[] convertedSecondPoint = {(float) secondPoint[0], (float) secondPoint[1]};</span>
+
+<span class="fc" id="L274">    return getEuclidianDistance(convertedFirstPoint, convertedSecondPoint);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

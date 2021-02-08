@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Projectile.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.entities</a> &gt; <span class="el_source">Projectile.java</span></div><h1>Projectile.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.entities;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Timer.Task;
+import com.threecubed.auber.Utils;
+import com.threecubed.auber.World;
+
+
+public class Projectile extends GameEntity {
+  CollisionActions collisionAction;
+  GameEntity originEntity;
+
+<span class="fc" id="L17">  public static enum CollisionActions {</span>
+<span class="fc" id="L18">    CONFUSE,</span>
+<span class="fc" id="L19">    SLOW,</span>
+<span class="fc" id="L20">    BLIND;</span>
+
+    public static CollisionActions randomAction() {
+      // Int rounds down so no need to sub 1 from length
+<span class="fc" id="L24">      return values()[(int) (Math.random() * values().length)];</span>
+    }
+  }
+
+  /**
+   * Initialise a projectile.
+   *
+   * @param x The x coordinate to initialise at
+   * @param y The y coordinate to initialise at
+   * @param velocity A {@link Vector2} representing the velocity of the projectile
+   * @param originEntity The entity that the projectile originated from
+   * @param action The effect the projectile should have on the player
+   * @param world The game world
+   * */
+  public Projectile(float x, float y, Vector2 velocity, GameEntity originEntity,
+      CollisionActions action, World world) {
+<span class="fc" id="L40">    super(</span>
+            x,
+            y,
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            Gdx.app.getType() == Application.ApplicationType.HeadlessDesktop</span>
+<span class="fc" id="L44">                    ? Utils.createMockSprite(8, 8)</span>
+<span class="nc" id="L45">                    : World.atlas.createSprite(&quot;projectile&quot;)</span>
+    );
+<span class="fc" id="L47">    collisionAction = action;</span>
+<span class="fc" id="L48">    this.originEntity = originEntity;</span>
+<span class="fc" id="L49">    this.velocity = velocity;</span>
+<span class="fc" id="L50">  }</span>
+
+  /**
+   * Step the projectile in its target direction, execute the collision handler if it hits the
+   * {@link Player}, destroy if it hits anything else.
+   *
+   * @param world The game world
+   * */
+  public void update(World world) {
+<span class="nc" id="L59">    position.add(velocity);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">    for (GameEntity entity : world.getEntities()) {</span>
+<span class="nc bnc" id="L61" title="All 6 branches missed.">      if (Intersector.overlaps(entity.sprite.getBoundingRectangle(),</span>
+<span class="nc" id="L62">            sprite.getBoundingRectangle())</span>
+          &amp;&amp; entity != originEntity &amp;&amp; entity != this) {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (entity instanceof Player) {</span>
+<span class="nc" id="L65">          handleCollisionWithPlayer(world);</span>
+        } 
+<span class="nc" id="L67">        world.queueEntityRemove(this);</span>
+<span class="nc" id="L68">        return;</span>
+      }
+<span class="nc" id="L70">    }</span>
+
+<span class="nc" id="L72">    TiledMapTileLayer collisionLayer = (TiledMapTileLayer)</span>
+<span class="nc" id="L73">        World.map.getLayers().get(&quot;collision_layer&quot;);</span>
+
+<span class="nc" id="L75">    int[] cellCoordinates = world.navigationMesh.getTilemapCoordinates(getCenterX(), getCenterY());</span>
+
+<span class="nc bnc" id="L77" title="All 2 branches missed.">    if (collisionLayer.getCell(cellCoordinates[0], cellCoordinates[1]) != null) {</span>
+<span class="nc" id="L78">      world.queueEntityRemove(this);</span>
+    }
+<span class="nc" id="L80">  }</span>
+
+  private void handleCollisionWithPlayer(World world) {
+<span class="nc bnc" id="L83" title="All 4 branches missed.">    switch (collisionAction) {</span>
+      case CONFUSE:
+<span class="nc" id="L85">        confusePlayer(world);</span>
+<span class="nc" id="L86">        break;</span>
+      case SLOW:
+<span class="nc" id="L88">        slowPlayer(world);</span>
+<span class="nc" id="L89">        break;</span>
+      case BLIND:
+<span class="nc" id="L91">        blindPlayer(world);</span>
+<span class="nc" id="L92">        break;</span>
+      default:
+        break;
+    }
+<span class="nc" id="L96">    world.player.health -= World.INFILTRATOR_PROJECTILE_DAMAGE;</span>
+<span class="nc" id="L97">  }</span>
+
+  private void confusePlayer(final World world) {
+<span class="nc" id="L100">    world.player.confused = true;</span>
+<span class="nc" id="L101">    world.player.playerTimer.scheduleTask(new Task() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L104">        world.player.confused = false;</span>
+<span class="nc" id="L105">      }</span>
+    }, World.AUBER_DEBUFF_TIME);
+<span class="nc" id="L107">  }</span>
+
+  private void slowPlayer(final World world) {
+<span class="nc" id="L110">    world.player.slowed = true;</span>
+<span class="nc" id="L111">    world.player.playerTimer.scheduleTask(new Task() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L114">        world.player.slowed = false;</span>
+<span class="nc" id="L115">      }</span>
+    }, World.AUBER_DEBUFF_TIME);
+<span class="nc" id="L117">  }</span>
+
+  private void blindPlayer(final World world) {
+<span class="nc" id="L120">    world.player.blinded = true;</span>
+<span class="nc" id="L121">    world.player.playerTimer.scheduleTask(new Task() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L124">        world.player.blinded = false;</span>
+<span class="nc" id="L125">      }</span>
+    }, World.AUBER_DEBUFF_TIME - 3f);
+<span class="nc" id="L127">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameUI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.ui</a> &gt; <span class="el_source">GameUI.java</span></div><h1>GameUI.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.ui;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.threecubed.auber.AuberGame;
+import com.threecubed.auber.World;
+
+
+public class GameUI {
+  private static final int CHARGE_METER_WIDTH = 20;
+  private static final int CHARGE_METER_MAX_HEIGHT = 100;
+<span class="nc" id="L22">  private static final Vector2 CHARGE_METER_POSITION = new Vector2(50f, 50f);</span>
+
+<span class="nc" id="L24">  private static final Vector2 HEALTHBAR_POSITION = new Vector2(250f, 50f);</span>
+  private static final int HEALTHBAR_WIDTH = 20;
+  private static final int HEALTHBAR_MAX_HEIGHT = 100;
+
+  private static final int MAP_HEIGHT_PIXEL_SPACE = 720;
+  private static final int MAP_WIDTH_PIXEL_SPACE = 720;
+
+<span class="nc" id="L31">  private static final Vector2 HEALTH_WARNINGS_POSITION = new Vector2(350f, 70f);</span>
+<span class="nc" id="L32">  private static Vector2 BUFFS_POSITION = new Vector2(20f, 1040f);</span>
+
+<span class="nc" id="L34">  private static Vector2 SYSTEM_WARNINGS_POSITION = new Vector2(1750f, 50f);</span>
+
+<span class="nc" id="L36">  private ShapeRenderer shapeRenderer = new ShapeRenderer();</span>
+
+  private Sprite arrowSprite;
+  private Sprite miniMapSprite;
+  private Sprite miniMapMarker;
+  private Sprite miniMapSystemMarker;
+<span class="nc" id="L42">  private float MINIMAP_SCALE_FACTOR = 1f;</span>
+<span class="nc" id="L43">  private Vector2 minimapOffset = new Vector2(150f, 150f);</span>
+  private Vector2 mapPos;
+<span class="nc" id="L45">  private Color blindedColor = new Color(0f, 0f, 0f, 1f);</span>
+
+<span class="nc" id="L47">  private BitmapFont uiFont = new BitmapFont();</span>
+
+<span class="nc" id="L49">  public GameUI(AuberGame game) {</span>
+<span class="nc" id="L50">    arrowSprite = World.atlas.createSprite(&quot;arrow2&quot;);</span>
+<span class="nc" id="L51">    miniMapSprite = World.atlas.createSprite(&quot;minimapTexture&quot;);</span>
+<span class="nc" id="L52">    miniMapMarker = World.atlas.createSprite(&quot;mm_indicator&quot;);</span>
+<span class="nc" id="L53">    miniMapSystemMarker = World.atlas.createSprite(&quot;mm_system_indicator&quot;);</span>
+<span class="nc" id="L54">    miniMapSprite.scale(MINIMAP_SCALE_FACTOR);</span>
+<span class="nc" id="L55">    mapPos = new Vector2(</span>
+<span class="nc" id="L56">            Gdx.graphics.getWidth() - miniMapSprite.getWidth() - minimapOffset.x,</span>
+<span class="nc" id="L57">            Gdx.graphics.getHeight() - miniMapSprite.getHeight() - minimapOffset.y</span>
+    );
+<span class="nc" id="L59">  }</span>
+
+  /**
+   * Render the different elements of the UI to the screen.
+   *
+   * @param world The game world.
+   * @param screenBatch The batch to draw the UI to
+   * */
+  public void render(World world, SpriteBatch screenBatch) {
+    //SYSTEM_WARNINGS_POSITION = new Vector2((1750f / 1920f) * Gdx.graphics.getWidth(), 50f);
+    //BUFFS_POSITION = new Vector2(20f, (1040f / 1080f) * Gdx.graphics.getHeight());
+<span class="nc bnc" id="L70" title="All 2 branches missed.">    if (world.player.blinded) {</span>
+<span class="nc" id="L71">      shapeRenderer.begin(ShapeType.Filled);</span>
+<span class="nc" id="L72">      shapeRenderer.setColor(blindedColor);</span>
+<span class="nc" id="L73">      shapeRenderer.rect(0f, 0f, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());</span>
+<span class="nc" id="L74">      shapeRenderer.setColor(Color.WHITE);</span>
+<span class="nc" id="L75">      shapeRenderer.end();</span>
+    }
+
+<span class="nc" id="L78">    drawChargeMeter(world, screenBatch);</span>
+<span class="nc" id="L79">    drawHealthbar(world, screenBatch);</span>
+<span class="nc" id="L80">    drawHealthWarnings(world, screenBatch);</span>
+<span class="nc" id="L81">    drawBuffs(world, screenBatch);</span>
+<span class="nc" id="L82">    drawSystemWarnings(world, screenBatch);</span>
+<span class="nc" id="L83">    drawMinimap(world, screenBatch);</span>
+<span class="nc" id="L84">  }</span>
+
+  /**
+   * Draw the teleporter charge meter.
+   *
+   * @param world The game world
+   * @param screenBatch The batch to draw to
+   * */
+  private void drawChargeMeter(World world, SpriteBatch screenBatch) {
+<span class="nc" id="L93">    screenBatch.begin();</span>
+<span class="nc" id="L94">    uiFont.draw(screenBatch, &quot;Teleporter Ray Charge&quot;,</span>
+        CHARGE_METER_POSITION.x,
+        CHARGE_METER_POSITION.y + (CHARGE_METER_MAX_HEIGHT / 2));
+<span class="nc" id="L97">    screenBatch.end();</span>
+
+<span class="nc" id="L99">    float chargeMeterHeight = world.auberTeleporterCharge * CHARGE_METER_MAX_HEIGHT;</span>
+    
+    // Make the charge meter green if weapon is charged
+<span class="nc bnc" id="L102" title="All 2 branches missed.">    if (chargeMeterHeight &gt; CHARGE_METER_MAX_HEIGHT * 0.95f) {</span>
+<span class="nc" id="L103">      shapeRenderer.setColor(Color.GREEN);</span>
+    } else {
+<span class="nc" id="L105">      shapeRenderer.setColor(Color.RED);</span>
+    }
+
+<span class="nc" id="L108">    shapeRenderer.begin(ShapeType.Filled);</span>
+<span class="nc" id="L109">    shapeRenderer.rect(CHARGE_METER_POSITION.x + 160f, CHARGE_METER_POSITION.y, CHARGE_METER_WIDTH,</span>
+        chargeMeterHeight);
+<span class="nc" id="L111">    shapeRenderer.end();</span>
+<span class="nc" id="L112">  }</span>
+
+  private void drawHealthbar(World world, SpriteBatch screenBatch) {
+<span class="nc" id="L115">    screenBatch.begin();</span>
+<span class="nc" id="L116">    uiFont.draw(screenBatch, &quot;Health&quot;,</span>
+        HEALTHBAR_POSITION.x,
+        HEALTHBAR_POSITION.y + (HEALTHBAR_MAX_HEIGHT / 2));
+<span class="nc" id="L119">    screenBatch.end();</span>
+
+<span class="nc" id="L121">    float healthbarHeight = world.player.health * HEALTHBAR_MAX_HEIGHT;</span>
+
+    // Set the healthbar colour based on amount of health/if invincible
+<span class="nc bnc" id="L124" title="All 2 branches missed.">    if (world.player.invincible) {</span>
+<span class="nc" id="L125">      shapeRenderer.setColor(Color.PURPLE);</span>
+    }
+    else {
+<span class="nc bnc" id="L128" title="All 2 branches missed.">      if (healthbarHeight &gt; CHARGE_METER_MAX_HEIGHT * 0.8f) {</span>
+<span class="nc" id="L129">        shapeRenderer.setColor(Color.GREEN);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">      } else if (healthbarHeight &gt; CHARGE_METER_MAX_HEIGHT * 0.5) {</span>
+<span class="nc" id="L131">        shapeRenderer.setColor(Color.ORANGE);</span>
+      } else {
+<span class="nc" id="L133">        shapeRenderer.setColor(Color.RED);</span>
+      }
+    }
+
+<span class="nc" id="L137">    shapeRenderer.begin(ShapeType.Filled);</span>
+<span class="nc" id="L138">    shapeRenderer.rect(HEALTHBAR_POSITION.x + 60f, HEALTHBAR_POSITION.y, HEALTHBAR_WIDTH,</span>
+        healthbarHeight);
+<span class="nc" id="L140">    shapeRenderer.end();</span>
+<span class="nc" id="L141">  }</span>
+
+  /**
+   * Draw any health status warnings for Auber to the screen.
+   *
+   * @param world The game world
+   * @param screenBatch The batch to draw to
+   * */
+  private void drawHealthWarnings(World world, SpriteBatch screenBatch) {
+<span class="nc" id="L150">    screenBatch.begin();</span>
+<span class="nc" id="L151">    uiFont.setColor(Color.RED);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">    if (world.player.confused) {</span>
+<span class="nc" id="L153">      uiFont.draw(screenBatch, &quot;CONFUSED&quot;, HEALTH_WARNINGS_POSITION.x, HEALTH_WARNINGS_POSITION.y);</span>
+    }
+<span class="nc bnc" id="L155" title="All 2 branches missed.">    if (world.player.slowed) {</span>
+<span class="nc" id="L156">      uiFont.draw(screenBatch, &quot;SLOWED&quot;, HEALTH_WARNINGS_POSITION.x,</span>
+          HEALTH_WARNINGS_POSITION.y + 20f);
+    }
+<span class="nc bnc" id="L159" title="All 2 branches missed.">    if (world.player.blinded) {</span>
+<span class="nc" id="L160">      uiFont.draw(screenBatch, &quot;BLINDED&quot;, HEALTH_WARNINGS_POSITION.x,</span>
+          HEALTH_WARNINGS_POSITION.y + 40f);
+    }
+<span class="nc" id="L163">    uiFont.setColor(Color.WHITE);</span>
+<span class="nc" id="L164">    screenBatch.end();</span>
+<span class="nc" id="L165">  }</span>
+
+  /**
+   * Draw the state of each system to the screen.
+   *
+   * @param world The world object
+   * @param screenBatch The batch to draw to
+   * */
+  private void drawSystemWarnings(World world, SpriteBatch screenBatch) {
+<span class="nc" id="L174">    screenBatch.begin();</span>
+<span class="nc" id="L175">    int offset = 0;</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">    for (RectangleMapObject system : world.systems) {</span>
+<span class="nc" id="L177">      Rectangle systemRectangle = system.getRectangle();</span>
+<span class="nc" id="L178">      Vector2 systemAngleVector = new Vector2(systemRectangle.getX() - world.player.position.x,</span>
+<span class="nc" id="L179">                                              systemRectangle.getY() - world.player.position.y);</span>
+
+<span class="nc" id="L181">      arrowSprite.setPosition(SYSTEM_WARNINGS_POSITION.x - 20f, SYSTEM_WARNINGS_POSITION.y</span>
+          + offset - 10f);
+<span class="nc" id="L183">      arrowSprite.setRotation(systemAngleVector.angleDeg() - 90f);</span>
+<span class="nc" id="L184">      arrowSprite.draw(screenBatch);</span>
+
+<span class="nc" id="L186">      String systemName = system.getName();</span>
+      // No need for DESTROYED case as when system destroyed, removed from systems list
+<span class="nc bnc" id="L188" title="All 3 branches missed.">      switch (world.getSystemState(system)) {</span>
+        case WORKING:
+<span class="nc" id="L190">          uiFont.setColor(Color.GREEN);</span>
+<span class="nc" id="L191">          break;</span>
+        case ATTACKED:
+<span class="nc" id="L193">          uiFont.setColor(Color.RED);</span>
+<span class="nc" id="L194">          break;</span>
+        default:
+          break;
+      }
+
+<span class="nc" id="L199">      uiFont.draw(screenBatch, systemName, SYSTEM_WARNINGS_POSITION.x,</span>
+          SYSTEM_WARNINGS_POSITION.y + offset);
+<span class="nc" id="L201">      offset += 25f;</span>
+
+<span class="nc" id="L203">    }</span>
+<span class="nc" id="L204">    uiFont.setColor(Color.WHITE);</span>
+<span class="nc" id="L205">    screenBatch.end();</span>
+<span class="nc" id="L206">  }</span>
+
+  /**
+   * Draw the minimap to the screen.
+   *
+   * @param world The world object
+   * @param screenBatch The batch to draw to
+   * */
+  private void drawMinimap(World world, SpriteBatch screenBatch){
+<span class="nc" id="L215">    screenBatch.begin();</span>
+    // Draw mini map background
+<span class="nc" id="L217">    miniMapSprite.setPosition(</span>
+            mapPos.x,
+            mapPos.y
+    );
+<span class="nc" id="L221">    miniMapSprite.draw(screenBatch);</span>
+
+    // Draw player indicator over map
+<span class="nc" id="L224">    miniMapMarker.setPosition(</span>
+<span class="nc" id="L225">            mapPos.x + (miniMapSprite.getWidth() * ((world.player.position.x/MAP_WIDTH_PIXEL_SPACE) * 2f) - (miniMapSprite.getWidth() * 0.5f)) - (miniMapMarker.getWidth() / 2f),</span>
+<span class="nc" id="L226">            mapPos.y + (miniMapSprite.getHeight() * ((world.player.position.y/MAP_HEIGHT_PIXEL_SPACE) * 2f) - (miniMapSprite.getHeight() * 0.5f))</span>
+    );
+<span class="nc" id="L228">    miniMapMarker.draw(screenBatch);</span>
+
+    // Draw compromised systems over map
+    // TODO: Maybe make the system indicators blink?
+<span class="nc bnc" id="L232" title="All 2 branches missed.">    for (RectangleMapObject system : world.systems) {</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">      if (world.getSystemState(system) == World.SystemStates.ATTACKED) {</span>
+        // Draw on map
+<span class="nc" id="L235">        miniMapSystemMarker.setPosition(</span>
+<span class="nc" id="L236">                mapPos.x + (miniMapSprite.getWidth() * ((system.getRectangle().getX()/MAP_WIDTH_PIXEL_SPACE) * 2f) - (miniMapSprite.getWidth() * 0.5f)) - (miniMapSystemMarker.getWidth() / 2f),</span>
+<span class="nc" id="L237">                mapPos.y + (miniMapSprite.getHeight() * ((system.getRectangle().getY()/MAP_HEIGHT_PIXEL_SPACE) * 2f) - (miniMapSprite.getHeight() * 0.5f)) - (miniMapSystemMarker.getHeight() / 2f)</span>
+        );
+<span class="nc" id="L239">        miniMapSystemMarker.draw(screenBatch);</span>
+      }
+<span class="nc" id="L241">    }</span>
+<span class="nc" id="L242">    screenBatch.end();</span>
+<span class="nc" id="L243">  }</span>
+
+  /**
+   * Draw any buffs for Auber to the screen.
+   *
+   * @param world The game world
+   * @param screenBatch The batch to draw to
+   * */
+  private void drawBuffs(World world, SpriteBatch screenBatch) {
+<span class="nc" id="L252">    screenBatch.begin();</span>
+<span class="nc" id="L253">    uiFont.setColor(Color.GREEN);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">    if (world.player.invisible) {</span>
+<span class="nc" id="L255">      uiFont.draw(screenBatch, &quot;INVISIBLE&quot;, BUFFS_POSITION.x, BUFFS_POSITION.y);</span>
+    }
+<span class="nc bnc" id="L257" title="All 2 branches missed.">    if (world.player.invincible) {</span>
+<span class="nc" id="L258">      uiFont.draw(screenBatch, &quot;INVINCIBLE&quot;, BUFFS_POSITION.x,</span>
+              BUFFS_POSITION.y - 20f);
+    }
+<span class="nc bnc" id="L261" title="All 2 branches missed.">    if (world.player.superspeed) {</span>
+<span class="nc" id="L262">      uiFont.draw(screenBatch, &quot;SUPER SPEED&quot;, BUFFS_POSITION.x,</span>
+              BUFFS_POSITION.y - 40f);
+    }
+<span class="nc bnc" id="L265" title="All 2 branches missed.">    if (world.player.vision) {</span>
+<span class="nc" id="L266">      uiFont.draw(screenBatch, &quot;INFILTRATOR VISION&quot;, BUFFS_POSITION.x,</span>
+              BUFFS_POSITION.y - 60f);
+    }
+<span class="nc bnc" id="L269" title="All 2 branches missed.">    if (world.player.insta_beam) {</span>
+<span class="nc" id="L270">      uiFont.draw(screenBatch, &quot;INSTA-BEAM&quot;, BUFFS_POSITION.x,</span>
+              BUFFS_POSITION.y - 80f);
+    }
+<span class="nc" id="L273">    uiFont.setColor(Color.WHITE);</span>
+<span class="nc" id="L274">    screenBatch.end();</span>
+<span class="nc" id="L275">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

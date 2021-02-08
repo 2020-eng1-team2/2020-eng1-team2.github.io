@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuScreen.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.screens</a> &gt; <span class="el_source">MenuScreen.java</span></div><h1>MenuScreen.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.screens;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.threecubed.auber.AuberGame;
+import com.threecubed.auber.World;
+import com.threecubed.auber.entities.Civilian;
+import com.threecubed.auber.entities.GameEntity;
+import com.threecubed.auber.entities.Infiltrator;
+import com.threecubed.auber.entities.Player;
+import com.threecubed.auber.ui.Difficulties;
+import com.threecubed.auber.ui.MenuUI;
+
+import java.awt.*;
+
+
+/**
+ * The main screen of the game, responsible for rendering entities and executing their functions.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class MenuScreen extends ScreenAdapter {
+  public World world;
+  public AuberGame game;
+  Sprite stars;
+
+<span class="nc" id="L36">  public static boolean begin = false;</span>
+
+  SpriteBatch screenBatch;
+  MenuUI ui;
+
+  // Used to determine if screen size is 1080p (if so, fullscreen mode is unlocked)
+<span class="nc" id="L42">  Dimension dimension = java.awt.Toolkit.getDefaultToolkit().getScreenSize();</span>
+
+<span class="nc" id="L44">  public static Difficulties difficulty = Difficulties.Easy;</span>
+
+<span class="nc" id="L46">  int workingSystems = 0;</span>
+
+  /**
+   * Initialise the game screen with the {@link AuberGame} object and add a few entities.
+   *
+   * @param game The game object
+   * */
+<span class="nc" id="L53">  public MenuScreen(AuberGame game) {</span>
+<span class="nc" id="L54">    this.game = game;</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L57">      this.screenBatch = new SpriteBatch();</span>
+<span class="nc" id="L58">      stars = World.atlas.createSprite(&quot;stars&quot;);</span>
+<span class="nc" id="L59">      ui = new MenuUI(game);</span>
+    }
+
+<span class="nc" id="L62">    world = new World(game, true);</span>
+
+<span class="nc bnc" id="L64" title="All 2 branches missed.">    for (int i = 0; i &lt; World.MAX_INFILTRATORS_IN_GAME; i++) {</span>
+<span class="nc" id="L65">      world.queueEntityAdd(new Infiltrator(world));</span>
+<span class="nc" id="L66">      world.infiltratorsAddedCount++;</span>
+    }
+<span class="nc bnc" id="L68" title="All 2 branches missed.">    for (int i = 0; i &lt; World.NPC_COUNT; i++) {</span>
+<span class="nc" id="L69">      world.queueEntityAdd(new Civilian(world));</span>
+    }
+<span class="nc" id="L71">  }</span>
+
+  @Override
+  public void render(float delta) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">    if (Gdx.input.isKeyJustPressed(Input.Keys.CONTROL_RIGHT)) {</span>
+<span class="nc" id="L76">      begin = true;</span>
+    }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">    if (Gdx.input.isKeyJustPressed(Input.Keys.F)) {</span>
+<span class="nc bnc" id="L79" title="All 4 branches missed.">      if (dimension.getHeight() == 1080 &amp;&amp; dimension.getWidth() == 1920) {</span>
+<span class="nc" id="L80">        Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());</span>
+      }
+    }
+<span class="nc bnc" id="L83" title="All 2 branches missed.">    if (Gdx.input.isKeyJustPressed(Input.Keys.G)) {</span>
+<span class="nc bnc" id="L84" title="All 4 branches missed.">      if (dimension.getHeight() == 1080 &amp;&amp; dimension.getWidth() == 1920) {</span>
+<span class="nc" id="L85">        Gdx.graphics.setWindowedMode(1920, 1080);</span>
+      }
+    }
+    // Add any queued entities
+<span class="nc" id="L89">    world.updateEntities();</span>
+
+    // Don't try and render anything if we're running headlessly
+<span class="nc bnc" id="L92" title="All 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+      // Set the background color
+<span class="nc" id="L94">      Gdx.gl.glClearColor(0, 0, 0, 1);</span>
+<span class="nc" id="L95">      Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);</span>
+
+<span class="nc" id="L97">      screenBatch.begin();</span>
+<span class="nc" id="L98">      screenBatch.draw(stars, 0, 0);</span>
+<span class="nc" id="L99">      screenBatch.end();</span>
+
+<span class="nc" id="L101">      OrthogonalTiledMapRenderer renderer = world.renderer;</span>
+<span class="nc" id="L102">      renderer.setView(world.camera);</span>
+<span class="nc" id="L103">      renderer.render(world.backgroundLayersIds);</span>
+
+<span class="nc" id="L105">      Batch batch = renderer.getBatch();</span>
+      // Iterate over all entities. Perform movement logic and render them.
+<span class="nc" id="L107">      batch.begin();</span>
+<span class="nc" id="L108">      world.infiltratorCount = 0;</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">      for (GameEntity entity : world.getEntities()) {</span>
+<span class="nc" id="L110">        entity.update(world);</span>
+<span class="nc" id="L111">        entity.render(batch, world.camera);</span>
+
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (entity instanceof Player) {</span>
+<span class="nc" id="L114">          world.camera.position.set(entity.position.x, entity.position.y, 0);</span>
+<span class="nc" id="L115">          world.camera.update();</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        } else if (entity instanceof Infiltrator) {</span>
+<span class="nc" id="L117">          Infiltrator infiltrator = (Infiltrator) entity;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">          if (infiltrator.aiEnabled) {</span>
+<span class="nc" id="L119">            world.infiltratorCount += 1;</span>
+          }
+        }
+<span class="nc" id="L122">      }</span>
+<span class="nc" id="L123">      batch.end();</span>
+<span class="nc" id="L124">      renderer.render(world.foregroundLayersIds);</span>
+    }
+
+<span class="nc bnc" id="L127" title="All 4 branches missed.">    if (world.infiltratorCount &lt; World.MAX_INFILTRATORS_IN_GAME</span>
+            &amp;&amp; world.infiltratorsAddedCount &lt; World.MAX_INFILTRATORS) {
+<span class="nc" id="L129">      Infiltrator newInfiltrator = new Infiltrator(world);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">      while (newInfiltrator.entityOnScreen(world)) {</span>
+<span class="nc" id="L131">        newInfiltrator.moveToRandomLocation(world);</span>
+      }
+<span class="nc" id="L133">      world.queueEntityAdd(newInfiltrator);</span>
+<span class="nc" id="L134">      world.infiltratorsAddedCount++;</span>
+    }
+    // TODO: Make this more elegant
+    // This is what causes the camera to follow an NPC in demo mode (title screen)
+<span class="nc" id="L138">    world.player.position = world.getEntities().get(world.NPC_COUNT - 1).position;</span>
+
+    // Draw the UI
+<span class="nc bnc" id="L141" title="All 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L142">      ui.render(world, screenBatch);</span>
+    }
+<span class="nc" id="L144">    world.checkForEndState();</span>
+<span class="nc" id="L145">  }</span>
+
+  @Override
+  public void dispose() {
+<span class="nc" id="L149">    world.renderer.dispose();</span>
+<span class="nc" id="L150">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

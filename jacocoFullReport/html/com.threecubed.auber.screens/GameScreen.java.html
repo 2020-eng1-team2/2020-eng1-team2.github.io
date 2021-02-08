@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GameScreen.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.screens</a> &gt; <span class="el_source">GameScreen.java</span></div><h1>GameScreen.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.screens;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.threecubed.auber.AuberGame;
+import com.threecubed.auber.World;
+import com.threecubed.auber.entities.Civilian;
+import com.threecubed.auber.entities.GameEntity;
+import com.threecubed.auber.entities.Infiltrator;
+import com.threecubed.auber.entities.Player;
+import com.threecubed.auber.ui.Difficulties;
+import com.threecubed.auber.ui.GameUI;
+import com.threecubed.auber.ui.PauseUI;
+
+
+/**
+ * The main screen of the game, responsible for rendering entities and executing their functions.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class GameScreen extends ScreenAdapter {
+  public World world;
+  public AuberGame game;
+  Sprite stars;
+
+<span class="fc" id="L35">  public static boolean paused = false;</span>
+
+  SpriteBatch screenBatch;
+  GameUI ui;
+  PauseUI pauseUi;
+
+<span class="pc" id="L41">  int workingSystems = 0;</span>
+
+  /**
+   * Initialise the game screen with the {@link AuberGame} object and add a few entities.
+   *
+   * @param game The game object
+   * @param demoMode Whether the game should run in demo mode
+   * */
+<span class="fc" id="L49">  public GameScreen(AuberGame game, boolean demoMode) {</span>
+<span class="fc" id="L50">    this.game = game;</span>
+
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L53">       screenBatch = new SpriteBatch();</span>
+<span class="nc" id="L54">      stars = World.atlas.createSprite(&quot;stars&quot;);</span>
+<span class="nc" id="L55">      ui = new GameUI(game);</span>
+<span class="nc" id="L56">      pauseUi = new PauseUI(game, world);</span>
+    }
+
+<span class="fc" id="L59">    world = new World(game, demoMode);</span>
+
+
+<span class="fc bfc" id="L62" title="All 2 branches covered.">    for (int i = 0; i &lt; World.MAX_INFILTRATORS_IN_GAME; i++) {</span>
+<span class="fc" id="L63">      world.queueEntityAdd(new Infiltrator(world));</span>
+<span class="fc" id="L64">      world.infiltratorsAddedCount++;</span>
+    }
+<span class="fc bfc" id="L66" title="All 2 branches covered.">    for (int i = 0; i &lt; World.NPC_COUNT; i++) {</span>
+<span class="fc" id="L67">      world.queueEntityAdd(new Civilian(world));</span>
+    }
+<span class="fc" id="L69">  }</span>
+
+  /**
+   * Initialise the game screen with the {@link AuberGame} object and add a few entities.
+   *
+   * @param game The game object
+   * @param diff Difficulty of the game
+   * */
+<span class="fc" id="L77">  public GameScreen(AuberGame game, Difficulties diff) {</span>
+<span class="fc" id="L78">    this.game = game;</span>
+
+<span class="fc" id="L80">    world = new World(game, diff);</span>
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L83">      screenBatch = new SpriteBatch();</span>
+<span class="nc" id="L84">      stars = World.atlas.createSprite(&quot;stars&quot;);</span>
+<span class="nc" id="L85">      ui = new GameUI(game);</span>
+<span class="nc" id="L86">      pauseUi = new PauseUI(game, world);</span>
+    }
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">    for (int i = 0; i &lt; World.MAX_INFILTRATORS_IN_GAME; i++) {</span>
+<span class="fc" id="L90">      world.queueEntityAdd(new Infiltrator(world));</span>
+<span class="fc" id="L91">      world.infiltratorsAddedCount++;</span>
+    }
+<span class="fc bfc" id="L93" title="All 2 branches covered.">    for (int i = 0; i &lt; World.NPC_COUNT; i++) {</span>
+<span class="fc" id="L94">      world.queueEntityAdd(new Civilian(world));</span>
+    }
+<span class="fc" id="L96">  }</span>
+
+  /**
+   * Initialise the game screen with the {@link AuberGame} object. For use with save files only.
+   *
+   * @param game The game object
+   * @param diff Difficulty of the game
+   * @param fromSave Is game loading from a save file
+   * */
+<span class="nc" id="L105">  public GameScreen(AuberGame game, Difficulties diff, Boolean fromSave) {</span>
+<span class="nc" id="L106">    this.game = game;</span>
+
+<span class="nc" id="L108">    world = new World(game, diff);</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L110">      screenBatch = new SpriteBatch();</span>
+<span class="nc" id="L111">      stars = World.atlas.createSprite(&quot;stars&quot;);</span>
+<span class="nc" id="L112">      ui = new GameUI(game);</span>
+<span class="nc" id="L113">      pauseUi = new PauseUI(game, world);</span>
+    }
+<span class="nc" id="L115">  }</span>
+
+  @Override
+  public void render(float delta) {
+<span class="nc bnc" id="L119" title="All 2 branches missed.">    if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {</span>
+      // Pause game, not end game
+<span class="nc bnc" id="L121" title="All 2 branches missed.">      this.paused = !this.paused;</span>
+    }
+    // Add any queued entities
+<span class="nc" id="L124">    world.updateEntities();</span>
+
+    // Set the background color
+<span class="nc" id="L127">    Gdx.gl.glClearColor(0, 0, 0, 1);</span>
+<span class="nc" id="L128">    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);</span>
+
+<span class="nc" id="L130">    screenBatch.begin();</span>
+<span class="nc" id="L131">    screenBatch.draw(stars, 0, 0);</span>
+<span class="nc" id="L132">    screenBatch.end();</span>
+
+<span class="nc" id="L134">    OrthogonalTiledMapRenderer renderer = world.renderer;</span>
+<span class="nc" id="L135">    renderer.setView(world.camera);</span>
+<span class="nc" id="L136">    renderer.render(world.backgroundLayersIds);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">    if (!this.paused) {</span>
+<span class="nc" id="L138">      Batch batch = renderer.getBatch();</span>
+      // Iterate over all entities. Perform movement logic and render them.
+<span class="nc" id="L140">      batch.begin();</span>
+<span class="nc" id="L141">      world.infiltratorCount = 0;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">      for (GameEntity entity : world.getEntities()) {</span>
+<span class="nc" id="L143">        entity.update(world);</span>
+<span class="nc" id="L144">        entity.render(batch, world.camera);</span>
+
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (entity instanceof Player) {</span>
+<span class="nc" id="L147">          world.camera.position.set(entity.position.x, entity.position.y, 0);</span>
+<span class="nc" id="L148">          world.camera.update();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        } else if (entity instanceof Infiltrator) {</span>
+<span class="nc" id="L150">          Infiltrator infiltrator = (Infiltrator) entity;</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">          if (infiltrator.aiEnabled) {</span>
+<span class="nc" id="L152">            world.infiltratorCount += 1;</span>
+          }
+        }
+<span class="nc" id="L155">      }</span>
+<span class="nc" id="L156">      batch.end();</span>
+<span class="nc" id="L157">      renderer.render(world.foregroundLayersIds);</span>
+
+<span class="nc bnc" id="L159" title="All 4 branches missed.">      if (world.infiltratorCount &lt; World.MAX_INFILTRATORS_IN_GAME</span>
+              &amp;&amp; world.infiltratorsAddedCount &lt; World.MAX_INFILTRATORS) {
+<span class="nc" id="L161">        Infiltrator newInfiltrator = new Infiltrator(world);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">        while (newInfiltrator.entityOnScreen(world)) {</span>
+<span class="nc" id="L163">          newInfiltrator.moveToRandomLocation(world);</span>
+        }
+<span class="nc" id="L165">        world.queueEntityAdd(newInfiltrator);</span>
+<span class="nc" id="L166">        world.infiltratorsAddedCount++;</span>
+      }
+
+      // Draw the UI
+<span class="nc" id="L170">      ui.render(world, screenBatch);</span>
+<span class="nc" id="L171">      world.checkForEndState();</span>
+<span class="nc" id="L172">    }</span>
+    else {
+      // game is paused,
+      // Draw pause menu UI
+
+<span class="nc" id="L177">      renderer.render(world.foregroundLayersIds);</span>
+
+<span class="nc" id="L179">      pauseUi.render(world, screenBatch);</span>
+    }
+<span class="nc" id="L181">  }</span>
+
+  @Override
+  public void dispose() {
+<span class="nc" id="L185">    world.renderer.dispose();</span>
+<span class="nc" id="L186">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuUI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.ui</a> &gt; <span class="el_source">MenuUI.java</span></div><h1>MenuUI.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.ui;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics.DisplayMode;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonReader;
+import com.badlogic.gdx.utils.JsonValue;
+import com.threecubed.auber.AuberGame;
+import com.threecubed.auber.World;
+import com.threecubed.auber.entities.Player;
+import com.threecubed.auber.screens.GameScreen;
+import com.threecubed.auber.screens.MenuScreen;
+import com.threecubed.auber.ui.Button;
+
+
+/**
+ * The menu screen is the first screen that shows in the game and is responsible for controlling
+ * when the game begins.
+ *
+ * @author Joseph Krystek-Walton
+ * @version 1.0
+ * @since 1.0
+ * */
+public class MenuUI {
+  World world;
+  AuberGame game;
+
+  Button playButton;
+  Button easyDiffButton;
+  Button hardDiffButton;
+  Button loadButton;
+  /** Displayed when save file does not exist*/
+  Button loadButtonError;
+  Button nextButton;
+  Button lastButton;
+  Button startButton;
+  OrthogonalTiledMapRenderer renderer;
+  Sprite instructions_first;
+  Sprite instructions_second;
+  Sprite title;
+  SpriteBatch spriteBatch;
+
+<span class="nc" id="L51">  FileHandle saveFile = Gdx.files.external(&quot;.auber/save.json&quot;);</span>
+
+  // Main menu screen counter (main, guide 1, guide 2)
+<span class="nc" id="L54">  int subScreen = 0;</span>
+
+  /**
+   * Instantiate the screen with the {@link AuberGame} object. Set the title and button up to be
+   * rendered.
+   *
+   * @param game The game object
+   * */
+<span class="nc" id="L62">  public MenuUI(final AuberGame game) {</span>
+<span class="nc" id="L63">    this.game = game;</span>
+
+<span class="nc" id="L65">    spriteBatch = new SpriteBatch();</span>
+
+<span class="nc" id="L67">    instructions_first = World.atlas.createSprite(&quot;guide1&quot;);</span>
+<span class="nc" id="L68">    instructions_first.setScale(1f);</span>
+<span class="nc" id="L69">    instructions_first.setPosition(Gdx.graphics.getWidth() / 2 - instructions_first.getWidth() / 2,</span>
+<span class="nc" id="L70">            Gdx.graphics.getHeight() / 2 - instructions_first.getHeight() / 2 + 50f);</span>
+<span class="nc" id="L71">    instructions_second = World.atlas.createSprite(&quot;guide2&quot;);</span>
+<span class="nc" id="L72">    instructions_second.setScale(1f);</span>
+<span class="nc" id="L73">    instructions_second.setPosition(Gdx.graphics.getWidth() / 2 - instructions_second.getWidth() / 2,</span>
+<span class="nc" id="L74">            Gdx.graphics.getHeight() / 2 - instructions_second.getHeight() / 2 + 50f);</span>
+<span class="nc" id="L75">    title = World.atlas.createSprite(&quot;auber_logo&quot;);</span>
+
+<span class="nc" id="L77">    Runnable onStartClick = new Runnable() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L80">        game.setScreen(new GameScreen(game, MenuScreen.difficulty));</span>
+<span class="nc" id="L81">      }</span>
+    };
+
+    // Button sprites are now drawn from the bottom left rather than center
+<span class="nc" id="L85">    startButton = new Button(</span>
+<span class="nc" id="L86">        new Vector2(Gdx.graphics.getWidth() / 2 - 200f, Gdx.graphics.getHeight() / 4 - 175f),</span>
+<span class="nc" id="L87">        1f, World.atlas.createSprite(&quot;startButton&quot;), World.atlas.createSprite(&quot;startButtonPressed&quot;), game, onStartClick);</span>
+
+<span class="nc" id="L89">    Runnable onDiffClick = new Runnable() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L92">        MenuScreen.difficulty = MenuScreen.difficulty.nextDifficulty(MenuScreen.difficulty);</span>
+<span class="nc" id="L93">      }</span>
+    };
+
+<span class="nc" id="L96">    easyDiffButton = new Button(</span>
+<span class="nc" id="L97">        new Vector2(0f, Gdx.graphics.getHeight() / 4 - 250f),</span>
+<span class="nc" id="L98">        1f, World.atlas.createSprite(&quot;easyButton&quot;), World.atlas.createSprite(&quot;easyButtonPressed&quot;), game, onDiffClick);</span>
+
+<span class="nc" id="L100">    hardDiffButton = new Button(</span>
+<span class="nc" id="L101">            new Vector2(0f, Gdx.graphics.getHeight() / 4 - 250f),</span>
+<span class="nc" id="L102">            1f, World.atlas.createSprite(&quot;hardButton&quot;), World.atlas.createSprite(&quot;hardButtonPressed&quot;), game, onDiffClick);</span>
+
+<span class="nc" id="L104">    Runnable onLoadClick = new Runnable() {</span>
+      @Override
+      public void run() {
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        if (saveFile.exists()) {</span>
+<span class="nc" id="L108">          Json json = new Json();</span>
+<span class="nc" id="L109">          JsonValue data = new JsonReader().parse(saveFile);</span>
+<span class="nc" id="L110">          GameScreen gs = new GameScreen(game, MenuScreen.difficulty, true);</span>
+<span class="nc" id="L111">          gs.world.read(json, data);</span>
+<span class="nc" id="L112">          game.setScreen(gs);</span>
+<span class="nc" id="L113">        } else {</span>
+<span class="nc" id="L114">          Gdx.app.log(&quot;load&quot;, &quot;save file doesn't exist&quot;);</span>
+        }
+<span class="nc" id="L116">      }</span>
+    };
+
+<span class="nc" id="L119">    loadButton = new Button(</span>
+<span class="nc" id="L120">            new Vector2(0f, Gdx.graphics.getHeight() / 4 - 125f),</span>
+<span class="nc" id="L121">            1f, World.atlas.createSprite(&quot;loadButton&quot;), World.atlas.createSprite(&quot;loadButtonPressed&quot;), game, onLoadClick);</span>
+
+<span class="nc" id="L123">    loadButtonError = new Button(</span>
+<span class="nc" id="L124">            new Vector2(0f, Gdx.graphics.getHeight() / 4 - 125f),</span>
+<span class="nc" id="L125">            1f, World.atlas.createSprite(&quot;loadButtonPressed&quot;), World.atlas.createSprite(&quot;loadButtonPressed&quot;), game, onLoadClick);</span>
+
+<span class="nc" id="L127">    Runnable onNextClick = new Runnable() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L130">        nextScreen();</span>
+<span class="nc" id="L131">      }</span>
+    };
+
+<span class="nc" id="L134">    nextButton = new Button(</span>
+<span class="nc" id="L135">            new Vector2(Gdx.graphics.getWidth() - 400f, Gdx.graphics.getHeight() / 4 - 175f),</span>
+<span class="nc" id="L136">            1f, World.atlas.createSprite(&quot;nextButton&quot;), World.atlas.createSprite(&quot;nextButtonPressed&quot;), game, onNextClick);</span>
+
+<span class="nc" id="L138">    playButton = new Button(</span>
+<span class="nc" id="L139">            new Vector2(0f, Gdx.graphics.getHeight() / 4),</span>
+<span class="nc" id="L140">            1f, World.atlas.createSprite(&quot;playButton&quot;), World.atlas.createSprite(&quot;playButtonPressed&quot;), game, onNextClick);</span>
+
+<span class="nc" id="L142">    Runnable onLastClick = new Runnable() {</span>
+      @Override
+      public void run() {
+<span class="nc" id="L145">        lastScreen();</span>
+<span class="nc" id="L146">      }</span>
+    };
+
+<span class="nc" id="L149">    lastButton = new Button(</span>
+<span class="nc" id="L150">            new Vector2(0f, Gdx.graphics.getHeight() / 4 - 175f),</span>
+<span class="nc" id="L151">            1f, World.atlas.createSprite(&quot;backButton&quot;), World.atlas.createSprite(&quot;backButtonPressed&quot;), game, onLastClick);</span>
+<span class="nc" id="L152">  }</span>
+
+  public void render(World world, SpriteBatch spriteBatch) {
+
+<span class="nc bnc" id="L156" title="All 2 branches missed.">    if (MenuScreen.begin) {</span>
+<span class="nc" id="L157">      MenuScreen.begin = false;</span>
+<span class="nc" id="L158">      game.setScreen(new GameScreen(game, MenuScreen.difficulty));</span>
+    }
+
+<span class="nc" id="L161">    spriteBatch.begin();</span>
+
+<span class="nc bnc" id="L163" title="All 2 branches missed.">    if (subScreen == 0) {</span>
+      // draw menu
+<span class="nc" id="L165">      title.setScale(0.5f);</span>
+<span class="nc" id="L166">      title.setPosition(-200f, 400f);</span>
+<span class="nc" id="L167">      title.draw(spriteBatch);</span>
+
+<span class="nc" id="L169">      playButton.render(spriteBatch);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">      if (saveFile.exists()) {</span>
+<span class="nc" id="L171">        loadButton.render(spriteBatch);</span>
+      }
+      else {
+<span class="nc" id="L174">        loadButtonError.render(spriteBatch);</span>
+      }
+<span class="nc bnc" id="L176" title="All 2 branches missed.">      if (MenuScreen.difficulty == Difficulties.Easy) {</span>
+<span class="nc" id="L177">        easyDiffButton.render(spriteBatch);</span>
+      } else {
+<span class="nc" id="L179">        hardDiffButton.render(spriteBatch);</span>
+      }
+
+    }
+<span class="nc bnc" id="L183" title="All 2 branches missed.">    else if (subScreen == 1) {</span>
+      // draw guide 1
+<span class="nc" id="L185">      instructions_first.draw(spriteBatch);</span>
+<span class="nc" id="L186">      nextButton.render(spriteBatch);</span>
+<span class="nc" id="L187">      lastButton.render(spriteBatch);</span>
+    }
+    else {
+      // draw guide 2
+<span class="nc" id="L191">      instructions_second.draw(spriteBatch);</span>
+<span class="nc" id="L192">      lastButton.render(spriteBatch);</span>
+<span class="nc" id="L193">      startButton.render(spriteBatch);</span>
+    }
+
+<span class="nc" id="L196">    spriteBatch.end();</span>
+<span class="nc" id="L197">  }</span>
+
+  public void nextScreen() {
+<span class="nc" id="L200">    this.subScreen++;</span>
+<span class="nc" id="L201">  }</span>
+
+  public void lastScreen() {
+<span class="nc" id="L204">    this.subScreen--;</span>
+<span class="nc" id="L205">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

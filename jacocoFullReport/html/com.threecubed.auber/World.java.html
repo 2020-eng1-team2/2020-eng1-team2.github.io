@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>World.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber</a> &gt; <span class="el_source">World.java</span></div><h1>World.java</h1><pre class="source lang-java linenums">package com.threecubed.auber;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.maps.tiled.TiledMapTileSet;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Json;
+import com.badlogic.gdx.utils.JsonValue;
+import com.badlogic.gdx.utils.JsonWriter;
+import com.threecubed.auber.entities.*;
+import com.threecubed.auber.pathfinding.NavigationMesh;
+import com.threecubed.auber.screens.GameOverScreen;
+import com.threecubed.auber.screens.GameScreen;
+import com.threecubed.auber.Abilities;
+import com.threecubed.auber.ui.Difficulties;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+
+/**
+ * The world class stores information related to what is happening within the game world.
+ * It should only be used within the GameScreen screen.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class World implements Json.Serializable {
+  private AuberGame game;
+
+  public Player player;
+  public int infiltratorCount;
+
+<span class="fc" id="L48">  public boolean demoMode = false;</span>
+
+  /** Number of infiltrators added, including defeated ones. */
+<span class="fc" id="L51">  public int infiltratorsAddedCount = 0;</span>
+
+<span class="fc" id="L53">  private List&lt;GameEntity&gt; entities = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L54">  public List&lt;GameEntity&gt; newEntities = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L55">  public List&lt;GameEntity&gt; oldEntities = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L57">  public OrthographicCamera camera = new OrthographicCamera();</span>
+
+<span class="fc" id="L59">  public static final TiledMap map = new TmxMapLoader().load(&quot;map.tmx&quot;);</span>
+<span class="fc" id="L60">  public static final TiledMapTileSet tileset = map.getTileSets().getTileSet(0);</span>
+  public static TextureAtlas atlas;
+
+  public OrthogonalTiledMapRenderer renderer;
+
+<span class="fc" id="L65">  public ArrayList&lt;RectangleMapObject&gt; systems = new ArrayList&lt;&gt;();</span>
+  public RectangleMapObject medbay;
+<span class="fc" id="L67">  public ArrayList&lt;float[]&gt; spawnLocations = new ArrayList&lt;&gt;();</span>
+
+<span class="fc" id="L69">  public static Random randomNumberGenerator = new Random();</span>
+
+  // ------------------NAVIGATION----------------
+<span class="fc" id="L72">  public static final NavigationMesh navigationMesh = new NavigationMesh(</span>
+<span class="fc" id="L73">      (TiledMapTileLayer) map.getLayers().get(&quot;navigation_layer&quot;)</span>
+      );
+<span class="fc" id="L75">  public ArrayList&lt;float[]&gt; fleePoints = new ArrayList&lt;&gt;();</span>
+
+  //&lt;editor-fold desc=&quot;Constants&quot;&gt;
+  /** Coordinates for the bottom left and top right tiles of the brig. */
+<span class="fc" id="L79">  public static final float[][] BRIG_BOUNDS = {{240f, 608f}, {352f, 640f}};</span>
+  /** Coordinates for the medbay teleporter. */
+<span class="fc" id="L81">  public static final float[] MEDBAY_COORDINATES = {96f, 640f};</span>
+
+  // --------------------AUBER-------------------
+<span class="fc" id="L84">  public float auberTeleporterCharge = 0f;</span>
+  /** The rate at which the teleporter ray charges. */
+  public static final float AUBER_CHARGE_RATE = 0.05f;
+  /** The rate at which the teleporter ray charges during the insta_beam ability. */
+  public static final float AUBER_INSTA_BEAM_RATE = 1f;
+  /** The number of buffs which should spawn when a system is attacked. (Affected by game difficulty)*/
+<span class="fc" id="L90">  public int BUFFS_ON_ATTACK = 5;</span>
+  /** The time the ray should visibly render for. */
+  public static final float AUBER_RAY_TIME = 0.25f;
+  /** The time a debuff should last for (with the exception of blindness). */
+  public static final float AUBER_DEBUFF_TIME = 5f;
+  /** The time a buff should last for. */
+<span class="fc" id="L96">  public float AUBER_BUFF_TIME = 10f;</span>
+  /** The rate at which auber should heal. */
+  public static final float AUBER_HEAL_RATE = 0.005f;
+<span class="fc" id="L99">  public static final Color rayColorA = new Color(0.106f, 0.71f, 0.714f, 1f);</span>
+<span class="fc" id="L100">  public static final Color rayColorB = new Color(0.212f, 1f, 1f, 0.7f);</span>
+  //&lt;/editor-fold&gt;
+
+  //&lt;editor-fold desc=&quot;Rendering&quot;&gt;
+  // ------------------RENDERING-----------------
+  /** IDs of layers that should be rendered behind entities. */
+<span class="fc" id="L106">  public final int[] backgroundLayersIds = {</span>
+<span class="fc" id="L107">    map.getLayers().getIndex(&quot;background_layer&quot;),</span>
+    };
+
+  /** IDs of layers that should be rendered infront of entities. */
+<span class="fc" id="L111">  public final int[] foregroundLayersIds = {</span>
+<span class="fc" id="L112">    map.getLayers().getIndex(&quot;foreground_layer&quot;),</span>
+<span class="fc" id="L113">    map.getLayers().getIndex(&quot;collision_layer&quot;)</span>
+    };
+  //&lt;/editor-fold&gt;
+
+
+  /** An enum containing information about all dynamic/frequently accessed tiles. */
+<span class="fc" id="L119">  public static enum Tiles {</span>
+<span class="fc" id="L120">    WALL_SYSTEM(38),</span>
+<span class="fc" id="L121">    STANDALONE_SYSTEM(62),</span>
+<span class="fc" id="L122">    STANDALONE_SYSTEM_LIGHT(50),</span>
+
+<span class="fc" id="L124">    WALL_SYSTEM_ATTACKED(40),</span>
+<span class="fc" id="L125">    STANDALONE_SYSTEM_ATTACKED(64),</span>
+<span class="fc" id="L126">    STANDALONE_SYSTEM_LIGHT_ATTACKED(52),</span>
+
+<span class="fc" id="L128">    WALL_SYSTEM_DESTROYED(42),</span>
+<span class="fc" id="L129">    STANDALONE_SYSTEM_DESTROYED(66),</span>
+<span class="fc" id="L130">    STANDALONE_SYSTEM_LIGHT_DESTROYED(54),</span>
+
+    // Pathfinding tiles
+<span class="fc" id="L133">    FLEE_POINT(57);</span>
+
+
+
+    public final int tileId;
+
+<span class="fc" id="L139">    Tiles(int tileId) {</span>
+<span class="fc" id="L140">      this.tileId = tileId;</span>
+<span class="fc" id="L141">    }</span>
+
+    /**
+     * Return a cell object for a given tile type via its tileId.
+     *
+     * @return A cell object for the given tile ID
+     * */
+    public Cell getCell() {
+<span class="nc" id="L149">      Cell output = new Cell();</span>
+<span class="nc" id="L150">      output.setTile(tileset.getTile(tileId));</span>
+<span class="nc" id="L151">      return output;</span>
+    }
+
+    /**
+     * Return a tile from this enum by a given tile ID.
+     *
+     * @param id The ID of the {@link Tiles} object to return
+     * @return A {@link Tiles} object of the given ID
+     * @throws IllegalArgumentException Thrown if no tile could be found with the given ID
+     * */
+    public static Tiles getTileById(int id) {
+<span class="nc bnc" id="L162" title="All 2 branches missed.">      for (Tiles tile : Tiles.values()) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">        if (tile.tileId == id) {</span>
+<span class="nc" id="L164">          return tile;</span>
+        }
+      }
+<span class="nc" id="L167">      throw new IllegalArgumentException(&quot;Tile of given ID not found.&quot;);</span>
+    }
+  }
+
+  //&lt;editor-fold desc=&quot;Constants&quot;&gt;
+  /** The amount of time it takes for an infiltrator to sabotage a system. */
+  public static final float SYSTEM_BREAK_TIME = 5f;
+  /** The chance an infiltrator will sabotage after pathfinding to a system. */
+<span class="fc" id="L175">  public float SYSTEM_SABOTAGE_CHANCE = 0.6f;</span>
+  /** The distance the infiltrator can see. Default: 5 tiles */
+  public static final float INFILTRATOR_SIGHT_RANGE = 80f;
+  /** The speed at which infiltrator projectiles should travel. */
+  public static final float INFILTRATOR_PROJECTILE_SPEED = 4f;
+  /** Maximum infiltrators in a full game of Auber (including defated ones). */
+  public static final int MAX_INFILTRATORS = 8;
+  /** The interval at which the infiltrator should attack the player when exposed. */
+<span class="fc" id="L183">  public float INFILTRATOR_FIRING_INTERVAL = 5f;</span>
+  /** The damage a projectile should do. */
+  public static final float INFILTRATOR_PROJECTILE_DAMAGE = 0.1f;
+  /**
+   * Max infiltrators alive at a given point, Should always be less than
+   * {@link World#MAX_INFILTRATORS}.
+   * */
+  public static final int MAX_INFILTRATORS_IN_GAME = 3;
+
+  /** The amount of variance there should be between the speeds of different NPCs. */
+<span class="fc" id="L193">  public static final float[] NPC_SPEED_VARIANCE = {0.8f, 1.2f};</span>
+  /** The maximum amount of time (in seconds) an NPC should flee for. */
+  public static final float NPC_FLEE_TIME = 10f;
+  /** The speed multiplier an NPC should receive when fleeing. */
+  public static final float NPC_FLEE_MULTIPLIER = 1.2f;
+  /** The shortest distance an NPC should move from its current position when fleeing. */
+  public static final float NPC_MIN_FLEE_DISTANCE = 80f;
+  /** The distance an NPC can here the teleporter ray shoot from. */
+  public static final float NPC_EAR_STRENGTH = 80f;
+  /** The number of NPCs in the game. */
+  public static final int NPC_COUNT = 24;
+  //&lt;/editor-fold&gt;
+
+<span class="nc" id="L206">  public static enum SystemStates {</span>
+<span class="nc" id="L207">    WORKING,</span>
+<span class="nc" id="L208">    ATTACKED,</span>
+<span class="nc" id="L209">    DESTROYED</span>
+  }
+
+  @Override
+  public void write(Json json) {
+<span class="fc" id="L214">    json.writeValue(&quot;randomNumberGenerator&quot;, randomNumberGenerator);</span>
+<span class="fc" id="L215">    json.writeValue(&quot;cameraPosition&quot;, camera.position);</span>
+<span class="fc" id="L216">    json.writeValue(&quot;player&quot;, player);</span>
+<span class="fc" id="L217">    json.writeValue(&quot;infiltratorCount&quot;, infiltratorCount);</span>
+<span class="fc" id="L218">    json.writeValue(&quot;demoMode&quot;, demoMode);</span>
+<span class="fc" id="L219">    json.writeValue(&quot;infiltratorsAddedCount&quot;, infiltratorsAddedCount);</span>
+<span class="pc bnc" id="L220" title="All 2 branches missed.">    json.writeValue(&quot;entities&quot;, entities.stream().filter(x -&gt; !(x instanceof Player)).collect(Collectors.toList()));</span>
+<span class="fc" id="L221">    json.writeValue(&quot;buffsOnAttack&quot;, this.BUFFS_ON_ATTACK);</span>
+<span class="fc" id="L222">    json.writeValue(&quot;auberBuffTime&quot;, this.AUBER_BUFF_TIME);</span>
+<span class="fc" id="L223">    json.writeValue(&quot;infiltratorFiringInterval&quot;, this.INFILTRATOR_FIRING_INTERVAL);</span>
+<span class="fc" id="L224">    json.writeValue(&quot;systemSabotageChance&quot;, this.SYSTEM_SABOTAGE_CHANCE);</span>
+<span class="fc" id="L225">    json.writeValue(&quot;systems&quot;, systems);</span>
+<span class="fc" id="L226">  }</span>
+
+  @Override
+  @SuppressWarnings(&quot;unchecked&quot;)
+  public void read(Json json, JsonValue jsonData) {
+<span class="fc" id="L231">    this.randomNumberGenerator = json.readValue(&quot;randomNumberGenerator&quot;, Random.class, jsonData);</span>
+<span class="fc" id="L232">    this.camera.position.set(json.readValue(&quot;cameraPosition&quot;, Vector3.class, jsonData));</span>
+<span class="fc" id="L233">    Gdx.app.log(&quot;load&quot;, jsonData.get(&quot;player&quot;).toString());</span>
+<span class="fc" id="L234">    json.readFields(this.player, jsonData.get(&quot;player&quot;));</span>
+<span class="fc" id="L235">    this.entities.add(this.player);</span>
+<span class="fc" id="L236">    this.infiltratorCount = json.readValue(&quot;infiltratorCount&quot;, Integer.class, jsonData);</span>
+<span class="fc" id="L237">    this.demoMode = json.readValue(&quot;demoMode&quot;, Boolean.class, jsonData);</span>
+<span class="fc" id="L238">    this.infiltratorsAddedCount = json.readValue(&quot;infiltratorsAddedCount&quot;, Integer.class, jsonData);</span>
+<span class="fc" id="L239">    this.entities = json.readValue(&quot;entities&quot;, List.class, jsonData);</span>
+<span class="fc" id="L240">    this.BUFFS_ON_ATTACK = json.readValue(&quot;buffsOnAttack&quot;, Integer.class, jsonData);</span>
+<span class="fc" id="L241">    this.AUBER_BUFF_TIME = json.readValue(&quot;auberBuffTime&quot;, Float.class, jsonData);</span>
+<span class="fc" id="L242">    this.INFILTRATOR_FIRING_INTERVAL = json.readValue(&quot;infiltratorFiringInterval&quot;, Float.class, jsonData);</span>
+<span class="fc" id="L243">    this.SYSTEM_SABOTAGE_CHANCE = json.readValue(&quot;systemSabotageChance&quot;, Float.class, jsonData);</span>
+<span class="fc" id="L244">    this.systems = json.readValue(&quot;systems&quot;, ArrayList.class, jsonData);</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">    for (GameEntity e : entities) {</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">      if (e instanceof PowerUp) {</span>
+<span class="nc" id="L247">        ((PowerUp) e).world = this;</span>
+<span class="nc" id="L248">        ((PowerUp) e).recreateSprite();</span>
+      }
+<span class="nc" id="L250">    }</span>
+<span class="fc" id="L251">  }</span>
+
+  /**
+   * Initialise the game world with a given difficulty.
+   *
+   * @param game The game object.
+   * @param diff The difficulty of the game {@link Difficulties}.
+   * */
+<span class="fc" id="L259">  public World(AuberGame game, Difficulties diff) {</span>
+<span class="fc" id="L260">    this.game = game;</span>
+
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L263">      this.renderer = new OrthogonalTiledMapRenderer(map);</span>
+    }
+
+    // Configure the camera
+<span class="fc" id="L267">    camera.setToOrtho(false, 480, 270);</span>
+<span class="fc" id="L268">    camera.update();</span>
+
+<span class="fc" id="L270">    Player player = new Player(64f, 64f);</span>
+<span class="fc" id="L271">    queueEntityAdd(player);</span>
+<span class="fc" id="L272">    this.player = player;</span>
+
+<span class="fc bfc" id="L274" title="All 2 branches covered.">    if (diff == Difficulties.Hard) {</span>
+      // Game in hard mode
+      // Less buffs are dropped for auber
+<span class="fc" id="L277">      this.BUFFS_ON_ATTACK = 2;</span>
+      // Buffs last less time
+<span class="fc" id="L279">      this.AUBER_BUFF_TIME = 6f;</span>
+      // Infiltrators attack more often
+<span class="fc" id="L281">      this.INFILTRATOR_FIRING_INTERVAL = 3f;</span>
+      // Infiltrators attempt to sabotage more
+<span class="fc" id="L283">      this.SYSTEM_SABOTAGE_CHANCE = 0.8f;</span>
+    }
+    // Easy by default
+
+<span class="fc" id="L287">    MapObjects objects = map.getLayers().get(&quot;object_layer&quot;).getObjects();</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">    for (MapObject object : objects) {</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">      if (object instanceof RectangleMapObject) {</span>
+<span class="fc" id="L290">        RectangleMapObject rectangularObject = (RectangleMapObject) object;</span>
+<span class="fc bfc" id="L291" title="All 3 branches covered.">        switch (rectangularObject.getProperties().get(&quot;type&quot;, String.class)) {</span>
+          case &quot;system&quot;:
+<span class="fc" id="L293">            systems.add(rectangularObject);</span>
+<span class="fc" id="L294">            break;</span>
+          case &quot;medbay&quot;:
+<span class="fc" id="L296">            medbay = rectangularObject;</span>
+<span class="fc" id="L297">            break;</span>
+          default:
+            break;
+        }
+      }
+<span class="fc" id="L302">    }</span>
+
+<span class="fc" id="L304">    TiledMapTileLayer navigationLayer = (TiledMapTileLayer) map.getLayers().get(&quot;navigation_layer&quot;);</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">    for (int y = 0; y &lt; navigationLayer.getHeight(); y++) {</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">      for (int x = 0; x &lt; navigationLayer.getWidth(); x++) {</span>
+<span class="fc" id="L307">        Cell currentCell = navigationLayer.getCell(x, y);</span>
+<span class="fc" id="L308">        float[] cellCoordinates = {x * navigationLayer.getTileWidth(),</span>
+<span class="fc" id="L309">                y * navigationLayer.getTileHeight()};</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">        if (currentCell != null) {</span>
+<span class="fc" id="L311">          spawnLocations.add(cellCoordinates);</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">          if (currentCell.getTile().getId() == Tiles.FLEE_POINT.tileId) {</span>
+<span class="fc" id="L313">            fleePoints.add(cellCoordinates);</span>
+          }
+        }
+      }
+    }
+<span class="fc" id="L318">  }</span>
+
+  /**
+   * Initialise the game world with an easy difficulty (default).
+   *
+   * @param game The game object.
+   * */
+  public World(AuberGame game) {
+<span class="fc" id="L326">    this(game, Difficulties.Easy);</span>
+<span class="fc" id="L327">  }</span>
+
+  /**
+   * Initialise an instance of the world with the given game object.
+   * Demo mode locks the player to an NPC.
+   *
+   * @param game The game object
+   * @param demoMode Whether to run the game in demo mode
+   * */
+  public World(AuberGame game, boolean demoMode) {
+<span class="fc" id="L337">    this(game);</span>
+<span class="fc" id="L338">    this.demoMode = demoMode;</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">    if (demoMode) {</span>
+<span class="nc" id="L340">      camera.setToOrtho(false, 480, 270);</span>
+<span class="nc" id="L341">      camera.update();</span>
+    }
+<span class="fc" id="L343">  }</span>
+
+  /**
+   * Saves the state of the game to a file - &quot;.auber/save.json&quot; in the user's home directory.
+   */
+  public void saveGame() {
+<span class="nc" id="L349">    Json json = new Json();</span>
+<span class="nc" id="L350">    json.setOutputType(JsonWriter.OutputType.json);</span>
+<span class="nc" id="L351">    FileHandle file = Gdx.files.external(&quot;.auber/save.json&quot;);</span>
+<span class="nc" id="L352">    file.writeString(</span>
+<span class="nc" id="L353">        json.toJson(this),</span>
+        false
+    );
+<span class="nc" id="L356">  }</span>
+
+  public void addEntity(GameEntity entity) {
+<span class="nc" id="L359">    entities.add(entity);</span>
+<span class="nc" id="L360">  }</span>
+
+  public List&lt;GameEntity&gt; getEntities() {
+<span class="fc" id="L363">    return entities;</span>
+  }
+
+  /**
+   * Queue an entity to be added.
+   *
+   * @param entity The entity to queue
+   * */
+  public void queueEntityAdd(GameEntity entity) {
+<span class="fc" id="L372">    newEntities.add(entity);</span>
+<span class="fc" id="L373">  }</span>
+
+  /**
+   * Queue an entity to be removed.
+   *
+   * @param entity The entity to queue
+   * */
+  public void queueEntityRemove(GameEntity entity) {
+<span class="nc" id="L381">    oldEntities.add(entity);</span>
+<span class="nc" id="L382">  }</span>
+
+  /**
+   * Apply any queued entity removals/additions to the world.
+   * */
+  public void updateEntities() {
+<span class="fc" id="L388">    entities.addAll(newEntities);</span>
+<span class="fc" id="L389">    entities.removeAll(oldEntities);</span>
+<span class="fc" id="L390">    newEntities.clear();</span>
+<span class="fc" id="L391">    oldEntities.clear();</span>
+<span class="fc" id="L392">  }</span>
+
+  /**
+   * Update the sprite of a system to match a new state.
+   *
+   * @param x The x coordinate of the system object (not the tile)
+   * @param y The y coordinate of the system object (not the tile)
+   * @param newState The new state of the system
+   **/
+  public void updateSystemState(float x, float y, SystemStates newState) {
+<span class="nc" id="L402">    TiledMapTileLayer collisionLayer = (TiledMapTileLayer) World.map.getLayers()</span>
+<span class="nc" id="L403">        .get(&quot;collision_layer&quot;);</span>
+
+<span class="nc" id="L405">    int[] systemPosition = {</span>
+<span class="nc" id="L406">      (int) x / collisionLayer.getTileWidth(),</span>
+<span class="nc" id="L407">      (int) (y / collisionLayer.getTileHeight()) + 1</span>
+      };
+
+<span class="nc" id="L410">    Cell attackedSystemCell = collisionLayer.getCell(systemPosition[0], systemPosition[1]);</span>
+<span class="nc" id="L411">    int targetTileId = attackedSystemCell.getTile().getId();</span>
+
+<span class="nc bnc" id="L413" title="All 6 branches missed.">    if (targetTileId == World.Tiles.STANDALONE_SYSTEM.tileId</span>
+        || targetTileId == World.Tiles.STANDALONE_SYSTEM_ATTACKED.tileId
+        || targetTileId == World.Tiles.STANDALONE_SYSTEM_DESTROYED.tileId) {
+      Cell newSystem;
+      Cell newSystemLight;
+
+<span class="nc bnc" id="L419" title="All 4 branches missed.">      switch (newState) {</span>
+        case WORKING:
+<span class="nc" id="L421">          newSystem = World.Tiles.STANDALONE_SYSTEM.getCell();</span>
+<span class="nc" id="L422">          newSystemLight = World.Tiles.STANDALONE_SYSTEM_LIGHT.getCell();</span>
+<span class="nc" id="L423">          break;</span>
+        case ATTACKED:
+<span class="nc" id="L425">          newSystem = World.Tiles.STANDALONE_SYSTEM_ATTACKED.getCell();</span>
+<span class="nc" id="L426">          newSystemLight = World.Tiles.STANDALONE_SYSTEM_LIGHT_ATTACKED.getCell();</span>
+<span class="nc" id="L427">          break;</span>
+        case DESTROYED:
+<span class="nc" id="L429">          newSystem = World.Tiles.STANDALONE_SYSTEM_DESTROYED.getCell();</span>
+<span class="nc" id="L430">          newSystemLight = World.Tiles.STANDALONE_SYSTEM_LIGHT_DESTROYED.getCell();</span>
+<span class="nc" id="L431">          break;</span>
+        default:
+          // This line will never fire, However it needs to be here otherwise Java
+          // will think that theres a chance newSystem and newSystemLight may not have been
+          // initiated even though every enum state is covered
+<span class="nc" id="L436">          return;</span>
+      }
+<span class="nc" id="L438">      collisionLayer.setCell(systemPosition[0], systemPosition[1], newSystem);</span>
+
+<span class="nc" id="L440">      TiledMapTileLayer foregroundLayer = (TiledMapTileLayer) map.getLayers()</span>
+<span class="nc" id="L441">          .get(&quot;foreground_layer&quot;);</span>
+<span class="nc" id="L442">      foregroundLayer.setCell(systemPosition[0], systemPosition[1] + 1, newSystemLight);</span>
+<span class="nc" id="L443">    } else {</span>
+      Cell newSystem;
+<span class="nc bnc" id="L445" title="All 4 branches missed.">      switch (newState) {</span>
+        case WORKING:
+<span class="nc" id="L447">          newSystem = World.Tiles.WALL_SYSTEM.getCell();</span>
+<span class="nc" id="L448">          break;</span>
+        case ATTACKED:
+<span class="nc" id="L450">          newSystem = World.Tiles.WALL_SYSTEM_ATTACKED.getCell();</span>
+<span class="nc" id="L451">          break;</span>
+        case DESTROYED:
+<span class="nc" id="L453">          newSystem = World.Tiles.WALL_SYSTEM_DESTROYED.getCell();</span>
+<span class="nc" id="L454">          break;</span>
+        default:
+          // See above
+<span class="nc" id="L457">          return;</span>
+      }
+<span class="nc" id="L459">      collisionLayer.setCell(systemPosition[0], systemPosition[1], newSystem);</span>
+    }
+
+<span class="nc bnc" id="L462" title="All 2 branches missed.">    if (newState == SystemStates.DESTROYED) {</span>
+<span class="nc bnc" id="L463" title="All 2 branches missed.">      for (RectangleMapObject system : systems) {</span>
+<span class="nc bnc" id="L464" title="All 2 branches missed.">        if (system.getRectangle().getX() == x</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">            &amp;&amp; system.getRectangle().getY() == y) {</span>
+<span class="nc" id="L466">          systems.remove(system);</span>
+<span class="nc" id="L467">          break;</span>
+        }
+<span class="nc" id="L469">      }</span>
+    }
+<span class="nc" id="L471">  }</span>
+
+  /**
+   * Return the state of a system, given the coordinates of the system object (not the tile).
+   *
+   * @param x The x coordinate to check
+   * @param y The y coordinate to check
+   * @return A {@link SystemStates} representing the state of the system
+   * @throws IllegalArgumentException if a standalone system light is at the coordinates provided
+   * */
+  public SystemStates getSystemState(float x, float y) {
+<span class="nc" id="L482">    TiledMapTileLayer collisionLayer = (TiledMapTileLayer) World.map.getLayers()</span>
+<span class="nc" id="L483">        .get(&quot;collision_layer&quot;);</span>
+
+<span class="nc" id="L485">    int[] systemPosition = {</span>
+<span class="nc" id="L486">      (int) x / collisionLayer.getTileWidth(),</span>
+<span class="nc" id="L487">      (int) (y / collisionLayer.getTileHeight()) + 1</span>
+      };
+
+<span class="nc" id="L490">    Cell attackedSystemCell = collisionLayer.getCell(systemPosition[0], systemPosition[1]);</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">    if (attackedSystemCell == null) {</span>
+<span class="nc" id="L492">      throw new IllegalArgumentException(&quot;No tile at given coordinates&quot;);</span>
+    }
+
+<span class="nc" id="L495">    Tiles targetTile = Tiles.getTileById(attackedSystemCell.getTile().getId());</span>
+
+<span class="nc bnc" id="L497" title="All 4 branches missed.">    switch (targetTile) {</span>
+      case WALL_SYSTEM:
+      case STANDALONE_SYSTEM:
+<span class="nc" id="L500">        return SystemStates.WORKING;</span>
+
+      case WALL_SYSTEM_ATTACKED:
+      case STANDALONE_SYSTEM_ATTACKED:
+<span class="nc" id="L504">        return SystemStates.ATTACKED;</span>
+
+      case WALL_SYSTEM_DESTROYED:
+      case STANDALONE_SYSTEM_DESTROYED:
+<span class="nc" id="L508">        return SystemStates.DESTROYED;</span>
+
+      default:
+<span class="nc" id="L511">        throw new IllegalArgumentException(&quot;Use the coordinates of the System object on the&quot;</span>
+<span class="nc" id="L512">                                           .concat(&quot;tilemap - not the system tile.&quot;));</span>
+    }
+  }
+
+  public SystemStates getSystemState(RectangleMapObject system) {
+<span class="nc" id="L517">    return getSystemState(system.getRectangle().x, system.getRectangle().y);</span>
+  }
+
+  /**
+   * Check to see if any of the end conditions have been met, if so update the screen.
+   * */
+  public void checkForEndState() {
+<span class="fc bfc" id="L524" title="All 2 branches covered.">    if (systems.isEmpty()) {</span>
+<span class="pc bpc" id="L525" title="1 of 2 branches missed.">      if (!demoMode) {</span>
+<span class="fc" id="L526">        game.setScreen(new GameOverScreen(game, false));</span>
+      } else {
+<span class="nc" id="L528">        game.setScreen(new GameScreen(game, true));</span>
+      }
+<span class="pc bpc" id="L530" title="1 of 2 branches missed.">    } else if (infiltratorCount &lt;= 0) {</span>
+<span class="fc" id="L531">      game.setScreen(new GameOverScreen(game, true));</span>
+    }
+<span class="fc" id="L533">  }</span>
+
+  /**
+   * Spawns in a random buff in the position of a random entity (Civilians only)
+   * */
+
+  public void spawnBuff() {
+    GameEntity ent;
+<span class="fc" id="L541">    boolean civExist = false;</span>
+<span class="pc bpc" id="L542" title="1 of 2 branches missed.">    for (GameEntity entity : this.getEntities()) {</span>
+<span class="fc bfc" id="L543" title="All 2 branches covered.">      if (entity instanceof Civilian) {</span>
+<span class="fc" id="L544">        civExist = true;</span>
+<span class="fc" id="L545">        break;</span>
+      }
+<span class="fc" id="L547">    }</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">    if (civExist) {</span>
+      do {
+<span class="fc" id="L550">        ent = this.getEntities().get(this.randomNumberGenerator.nextInt(this.getEntities().size()));</span>
+<span class="pc bpc" id="L551" title="1 of 2 branches missed.">      } while (!(ent instanceof Civilian));</span>
+<span class="fc" id="L552">      Vector2 spawnPos = ent.position;</span>
+<span class="fc" id="L553">      PowerUp powerUpTest = new PowerUp(spawnPos.x, spawnPos.y, this, Abilities.randomAbility());</span>
+<span class="fc" id="L554">      queueEntityAdd(powerUpTest);</span>
+    }
+    else {
+      // No spawn possible
+    }
+<span class="fc" id="L559">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PauseUI.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.ui</a> &gt; <span class="el_source">PauseUI.java</span></div><h1>PauseUI.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.ui;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.threecubed.auber.AuberGame;
+import com.threecubed.auber.World;
+import com.threecubed.auber.screens.GameScreen;
+import com.threecubed.auber.screens.MenuScreen;
+
+
+/**
+ * The Pause UI is shown when the player pauses the game.
+ *
+ * @author Joseph Krystek-Walton
+ * @version 1.0
+ * @since 1.0
+ * */
+public class PauseUI {
+    World world;
+    AuberGame game;
+
+    Button resumeButton;
+    Button quitButton;
+    Button saveButton;
+    OrthogonalTiledMapRenderer renderer;
+    SpriteBatch spriteBatch;
+
+    /**
+     * Instantiate the screen with the {@link AuberGame} object. Set the buttons up to be
+     * rendered.
+     *
+     * @param game The game object
+     * */
+<span class="nc" id="L36">    public PauseUI(final AuberGame game, World world) {</span>
+<span class="nc" id="L37">        this.game = game;</span>
+<span class="nc" id="L38">        this.world = world;</span>
+
+<span class="nc" id="L40">        spriteBatch = new SpriteBatch();</span>
+
+<span class="nc" id="L42">        Runnable onQuitClick = new Runnable() {</span>
+            @Override
+            public void run() {
+<span class="nc" id="L45">                GameScreen.paused = false;</span>
+<span class="nc" id="L46">                game.setScreen(new MenuScreen(game));</span>
+<span class="nc" id="L47">            }</span>
+        };
+
+        // Button sprites are now drawn from the bottom left rather than center
+<span class="nc" id="L51">        quitButton = new Button(</span>
+<span class="nc" id="L52">                new Vector2(0f, Gdx.graphics.getHeight() / 4 - 125f),</span>
+<span class="nc" id="L53">                1f, World.atlas.createSprite(&quot;quitButton&quot;), World.atlas.createSprite(&quot;quitButtonPressed&quot;), game, onQuitClick);</span>
+
+<span class="nc" id="L55">        Runnable onResumeClick = new Runnable() {</span>
+            @Override
+            public void run() {
+<span class="nc" id="L58">                GameScreen.paused = false;</span>
+<span class="nc" id="L59">            }</span>
+        };
+
+<span class="nc" id="L62">        resumeButton = new Button(</span>
+<span class="nc" id="L63">                new Vector2(Gdx.graphics.getWidth() - 400f, Gdx.graphics.getHeight() / 4 - 125f),</span>
+<span class="nc" id="L64">                1f, World.atlas.createSprite(&quot;resumeButton&quot;), World.atlas.createSprite(&quot;resumeButtonPressed&quot;), game, onResumeClick);</span>
+
+<span class="nc" id="L66">        Runnable onSaveClick = new Runnable() {</span>
+            @Override
+            public void run() {
+<span class="nc" id="L69">                world.saveGame();</span>
+<span class="nc" id="L70">                GameScreen.paused = false;</span>
+<span class="nc" id="L71">                game.setScreen(new MenuScreen(game));</span>
+<span class="nc" id="L72">            }</span>
+        };
+
+<span class="nc" id="L75">        saveButton = new Button(</span>
+<span class="nc" id="L76">                new Vector2(Gdx.graphics.getWidth() / 2 - 200f, Gdx.graphics.getHeight() / 4 - 125f),</span>
+<span class="nc" id="L77">                1f, World.atlas.createSprite(&quot;saveButton&quot;), World.atlas.createSprite(&quot;saveButtonPressed&quot;), game, onSaveClick);</span>
+<span class="nc" id="L78">    }</span>
+
+    public void render(World world, SpriteBatch spriteBatch) {
+
+<span class="nc" id="L82">        spriteBatch.begin();</span>
+
+<span class="nc" id="L84">        quitButton.render(spriteBatch);</span>
+<span class="nc" id="L85">        resumeButton.render(spriteBatch);</span>
+<span class="nc" id="L86">        saveButton.render(spriteBatch);</span>
+
+<span class="nc" id="L88">        spriteBatch.end();</span>
+<span class="nc" id="L89">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>

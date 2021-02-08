@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Player.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">auber-pt2</a> &gt; <a href="index.source.html" class="el_package">com.threecubed.auber.entities</a> &gt; <span class="el_source">Player.java</span></div><h1>Player.java</h1><pre class="source lang-java linenums">package com.threecubed.auber.entities;
+
+import com.badlogic.gdx.Application;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.MapProperties;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer.Cell;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Timer;
+import com.badlogic.gdx.utils.Timer.Task;
+import com.threecubed.auber.Utils;
+import com.threecubed.auber.World;
+import com.threecubed.auber.pathfinding.NavigationMesh;
+
+import java.util.List;
+
+
+/**
+ * The player entity that the user controls. Handles keyboard input, and interaction with other
+ * entities and tiles in the game world.
+ *
+ * @author Daniel O'Brien
+ * @version 1.0
+ * @since 1.0
+ * */
+public class Player extends GameEntity {
+<span class="fc" id="L36">  public Timer playerTimer = new Timer();</span>
+<span class="fc" id="L37">  private Vector2 teleporterRayCoordinates = new Vector2();</span>
+
+  /** Health of Auber - varies between 1 and 0. */
+<span class="fc" id="L40">  public float health = 1;</span>
+
+  /** True if Auber is hit with confusion */
+<span class="fc" id="L43">  public boolean confused = false;</span>
+  /** True if Auber is hit with slowness */
+<span class="fc" id="L45">  public boolean slowed = false;</span>
+  /** True if Auber is blinded */
+<span class="fc" id="L47">  public boolean blinded = false;</span>
+
+  /** True if Auber picks up invisibility */
+<span class="fc" id="L50">  public boolean invincible = false;</span>
+  /** True if Auber picks up invincibility */
+<span class="fc" id="L52">  public boolean invisible = false;</span>
+  /** True if Auber picks up super speed */
+<span class="fc" id="L54">  public boolean superspeed = false;</span>
+  /** True if Auber picks up vision */
+<span class="fc" id="L56">  public boolean vision = false;</span>
+  /** True if Auber picks up insta beam */
+<span class="fc" id="L58">  public boolean insta_beam = false;</span>
+
+  /** This is used once when {@link #vision} is activated to set all infiltrators to vulnerable */
+<span class="fc" id="L61">  public boolean oneTimeVision = false;</span>
+
+  private transient ShapeRenderer rayRenderer;
+
+  public Player(float x, float y) {
+<span class="fc" id="L66">    super(</span>
+            x,
+            y,
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">            Gdx.app.getType() == Application.ApplicationType.HeadlessDesktop</span>
+<span class="fc" id="L70">                    ? Utils.createMockSprite(14, 14)</span>
+<span class="nc" id="L71">                    : World.atlas.createSprite(&quot;player&quot;)</span>
+    );
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">    if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+<span class="nc" id="L74">       rayRenderer = new ShapeRenderer();</span>
+    }
+<span class="fc" id="L76">  }</span>
+
+  /**
+   * Handle player controls such as movement, interaction and firing the teleporing gun.
+   *
+   * @param world The game world
+   * */
+  @Override
+  public void update(World world) {
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">    if (!world.demoMode) {</span>
+<span class="pc bpc" id="L86" title="1 of 4 branches missed.">      if (Gdx.input.isKeyJustPressed(Input.Keys.Q) || health &lt;= 0) {</span>
+<span class="fc" id="L87">        position.set(World.MEDBAY_COORDINATES[0], World.MEDBAY_COORDINATES[1]);</span>
+<span class="fc" id="L88">        confused = false;</span>
+<span class="fc" id="L89">        slowed = false;</span>
+<span class="fc" id="L90">        teleporterRayCoordinates.setZero();</span>
+      }
+
+      // Increment Auber's health if in medbay
+<span class="fc bfc" id="L94" title="All 2 branches covered.">      if (world.medbay.getRectangle().contains(position.x, position.y)) {</span>
+<span class="fc" id="L95">        health += World.AUBER_HEAL_RATE;</span>
+<span class="fc" id="L96">        health = Math.min(1f, health);</span>
+      }
+      // Slow down Auber when they charge their weapon. Should be stopped when weapon half charged,
+      // hence the * 2
+<span class="fc" id="L100">      float speedModifier = Math.min(world.auberTeleporterCharge * speed * 2, speed);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">      if (slowed) {</span>
+<span class="nc" id="L102">        velocity.scl(0.5f);</span>
+      }
+
+      // Flip the velocity before new velocity calculated if confused. Otherwise, second iteration
+      // of flipped velocity will cancel out the first
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">      if (confused) {</span>
+<span class="nc" id="L108">        velocity.set(-velocity.x, -velocity.y);</span>
+      }
+
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">      if (Gdx.input.isKeyPressed(Input.Keys.W)) {</span>
+<span class="nc" id="L112">        velocity.y = Math.min(velocity.y + speed - speedModifier, maxSpeed);</span>
+      }
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">      if (Gdx.input.isKeyPressed(Input.Keys.A)) {</span>
+<span class="nc" id="L115">        velocity.x = Math.max(velocity.x - speed + speedModifier, -maxSpeed);</span>
+      }
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">      if (Gdx.input.isKeyPressed(Input.Keys.S)) {</span>
+<span class="nc" id="L118">        velocity.y = Math.max(velocity.y - speed + speedModifier, -maxSpeed);</span>
+      }
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">      if (Gdx.input.isKeyPressed(Input.Keys.D)) {</span>
+<span class="nc" id="L121">        velocity.x = Math.min(velocity.x + speed - speedModifier, maxSpeed);</span>
+      }
+
+
+<span class="pc bpc" id="L125" title="3 of 4 branches missed.">      if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) &amp;&amp; teleporterRayCoordinates.isZero()) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (insta_beam) {</span>
+<span class="nc" id="L127">          world.auberTeleporterCharge = Math.min(world.auberTeleporterCharge</span>
+                  + World.AUBER_INSTA_BEAM_RATE, 1f);
+        }
+        else {
+<span class="nc" id="L131">          world.auberTeleporterCharge = Math.min(world.auberTeleporterCharge</span>
+                  + World.AUBER_CHARGE_RATE, 1f);
+        }
+      } else {
+<span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (world.auberTeleporterCharge &gt; 0.95f) {</span>
+<span class="nc" id="L136">          world.auberTeleporterCharge = 0;</span>
+
+          // Scare entities
+<span class="nc" id="L139">          teleporterRayCoordinates = handleRayCollisions(world);</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">          for (GameEntity entity : world.getEntities()) {</span>
+<span class="nc" id="L141">            float entityDistance = NavigationMesh.getEuclidianDistance(</span>
+                new float[] {teleporterRayCoordinates.x, teleporterRayCoordinates.y},
+                new float[] {entity.position.x, entity.position.y}
+                );
+<span class="nc bnc" id="L145" title="All 4 branches missed.">            if (entityDistance &lt; World.NPC_EAR_STRENGTH &amp;&amp; entity instanceof Npc) {</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">              if (entity instanceof Infiltrator) {</span>
+<span class="nc" id="L147">                Infiltrator infiltrator = (Infiltrator) entity;</span>
+
+                // Exposed infiltrators shouldn't flee
+<span class="nc bnc" id="L150" title="All 2 branches missed.">                if (infiltrator.exposed) {</span>
+<span class="nc" id="L151">                  continue;</span>
+                }
+              }
+<span class="nc" id="L154">              Npc npc = (Npc) entity;</span>
+<span class="nc" id="L155">              npc.navigateToNearestFleepoint(world);</span>
+            }
+<span class="nc" id="L157">          }</span>
+
+<span class="nc" id="L159">          playerTimer.scheduleTask(new Task() {</span>
+            @Override
+            public void run() {
+<span class="nc" id="L162">              teleporterRayCoordinates.setZero();</span>
+<span class="nc" id="L163">            }</span>
+          }, World.AUBER_RAY_TIME);
+        } else {
+<span class="fc" id="L166">          world.auberTeleporterCharge = Math.max(world.auberTeleporterCharge</span>
+              - World.AUBER_CHARGE_RATE, 0f);
+        }
+      }
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">      if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {</span>
+        // Interact with an object
+<span class="nc" id="L172">        RectangleMapObject nearbyObject = getNearbyObjects(World.map);</span>
+
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        if (nearbyObject != null) {</span>
+<span class="nc" id="L175">          MapProperties properties = nearbyObject.getProperties();</span>
+<span class="nc" id="L176">          String type = properties.get(&quot;type&quot;, String.class);</span>
+
+<span class="nc bnc" id="L178" title="All 2 branches missed.">          switch (type) {</span>
+            case &quot;teleporter&quot;:
+<span class="nc" id="L180">              MapObjects objects = World.map.getLayers().get(&quot;object_layer&quot;).getObjects();</span>
+
+<span class="nc" id="L182">              String linkedTeleporterId = properties.get(&quot;linked_teleporter&quot;, String.class);</span>
+<span class="nc" id="L183">              RectangleMapObject linkedTeleporter = (RectangleMapObject) objects.get(</span>
+                  linkedTeleporterId
+                  );
+<span class="nc" id="L186">              velocity.setZero();</span>
+<span class="nc" id="L187">              position.x = linkedTeleporter.getRectangle().getX();</span>
+<span class="nc" id="L188">              position.y = linkedTeleporter.getRectangle().getY();</span>
+<span class="nc" id="L189">              break;</span>
+
+            default:
+              break;
+          }
+        }
+      }
+      // Buffs are here
+<span class="fc bfc" id="L197" title="All 2 branches covered.">      if (invincible) {</span>
+<span class="fc" id="L198">        health = 1f;</span>
+      }
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">      if (invisible) {</span>
+<span class="nc" id="L201">        sprite.setAlpha(0.25f);</span>
+      }
+      else {
+<span class="fc" id="L204">        sprite.setAlpha(1f);</span>
+      }
+<span class="fc bfc" id="L206" title="All 2 branches covered.">      if (superspeed) {</span>
+<span class="fc" id="L207">        speed = 1.6f;</span>
+<span class="fc" id="L208">        maxSpeed = 4.8f;</span>
+      }
+      else {
+<span class="fc" id="L211">        speed = 0.4f;</span>
+<span class="fc" id="L212">        maxSpeed = 1.2f;</span>
+      }
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">      if (vision) {</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">        if (oneTimeVision) {</span>
+<span class="nc" id="L216">          oneTimeVision = false;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">          for (GameEntity infiltrator : world.getEntities()) {</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">            if (infiltrator instanceof Infiltrator) {</span>
+<span class="nc" id="L219">              ((Infiltrator) infiltrator).exposed = true;</span>
+            }
+<span class="nc" id="L221">          }</span>
+        }
+      }
+      // Insta beam is handled above where the left mouse button input is handled
+
+<span class="fc" id="L226">      Vector2 mousePosition = Utils.getMouseCoordinates(world.camera);</span>
+
+      // Set the rotation to the angle theta where theta is the angle between the mouse cursor and
+      // player position. Correct the player position to be measured from the centre of the sprite.
+<span class="fc" id="L230">      rotation = (float) (Math.toDegrees(Math.atan2(</span>
+<span class="fc" id="L231">              (mousePosition.y - getCenterY()),</span>
+<span class="fc" id="L232">              (mousePosition.x - getCenterX()))</span>
+            ) - 90f);
+
+      // Handle the confused debuff
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">      if (confused) {</span>
+<span class="nc" id="L237">        velocity.set(-velocity.x, -velocity.y);</span>
+      }
+
+<span class="fc" id="L240">      move(velocity, World.map);</span>
+
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">      if (Gdx.app.getType() != Application.ApplicationType.HeadlessDesktop) {</span>
+        // Detect power ups near the player (within region of player sprite)
+<span class="nc" id="L244">        PowerUp pu = getNearbyPowerUps(world);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">        if (pu != null) {</span>
+<span class="nc" id="L246">          Gdx.app.log(&quot;near&quot;, pu.getAbility().toString());</span>
+<span class="nc" id="L247">          pu.applyBuff();</span>
+<span class="nc" id="L248">          pu.sprite.setAlpha(0f);</span>
+        }
+      }
+    }
+<span class="fc" id="L252">  }</span>
+
+  /**
+   * Overrides the GameEntity render method to render the player's teleporter raygun, as well
+   * as the player itself.
+   *
+   * @param batch The batch to draw to
+   * @param camera The world's camera
+   * */
+  @Override
+  public void render(Batch batch, Camera camera) {
+<span class="nc bnc" id="L263" title="All 2 branches missed.">    if (!teleporterRayCoordinates.isZero()) {</span>
+<span class="nc" id="L264">      batch.end();</span>
+<span class="nc" id="L265">      Gdx.gl.glEnable(GL20.GL_BLEND);</span>
+<span class="nc" id="L266">      Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);</span>
+<span class="nc" id="L267">      rayRenderer.setProjectionMatrix(camera.combined);</span>
+<span class="nc" id="L268">      rayRenderer.begin(ShapeType.Filled);</span>
+<span class="nc" id="L269">      rayRenderer.rectLine(getCenterX(), getCenterY(),</span>
+          teleporterRayCoordinates.x, teleporterRayCoordinates.y, 4f,
+          World.rayColorA, World.rayColorB);
+<span class="nc" id="L272">      rayRenderer.end();</span>
+
+<span class="nc" id="L274">      batch.begin();</span>
+    }
+<span class="nc" id="L276">    super.render(batch, camera);</span>
+<span class="nc" id="L277">  }</span>
+
+  /**
+   * Handle teleporter ray collisions and return the coordinates of the object it collides with.
+   *
+   * @param world The game world
+   * @return The coordinates the ray hit
+   * */
+  private Vector2 handleRayCollisions(World world) {
+<span class="nc" id="L286">    Vector2 output = new Vector2();</span>
+
+<span class="nc" id="L288">    Vector2 targetCoordinates = new Vector2(Utils.getMouseCoordinates(world.camera));</span>
+<span class="nc" id="L289">    float alpha = 0.1f;</span>
+<span class="nc" id="L290">    boolean rayIntersected = false;</span>
+    // Allow the ray to go 20x the distance between the mouse and player,
+    // prevents game from hanging if ray escapes map
+<span class="nc bnc" id="L293" title="All 4 branches missed.">    while (!rayIntersected &amp;&amp; alpha &lt; 20) {</span>
+<span class="nc" id="L294">      output.x = getCenterX();</span>
+<span class="nc" id="L295">      output.y = getCenterY();</span>
+
+<span class="nc" id="L297">      output.lerp(targetCoordinates, alpha);</span>
+
+      // Check for entity collisions
+<span class="nc bnc" id="L300" title="All 2 branches missed.">      for (GameEntity entity : world.getEntities()) {</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">        if (!(entity instanceof Player)) {</span>
+<span class="nc bnc" id="L302" title="All 2 branches missed.">          if (entity.sprite.getBoundingRectangle().contains(output)) {</span>
+<span class="nc" id="L303">            rayIntersected = true;</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">            if (entity instanceof Npc) {</span>
+<span class="nc" id="L305">              Npc npc = (Npc) entity;</span>
+<span class="nc" id="L306">              npc.handleTeleporterShot(world);</span>
+<span class="nc" id="L307">            }</span>
+            break;
+          }
+        }
+<span class="nc" id="L311">      }</span>
+
+      // Check for tile collisions
+<span class="nc" id="L314">      TiledMapTileLayer collisionLayer = (TiledMapTileLayer) World.map.getLayers()</span>
+<span class="nc" id="L315">          .get(&quot;collision_layer&quot;);</span>
+<span class="nc" id="L316">      Cell targetCell = collisionLayer.getCell(</span>
+<span class="nc" id="L317">          (int) output.x / collisionLayer.getTileWidth(),</span>
+<span class="nc" id="L318">          (int) output.y / collisionLayer.getTileHeight()</span>
+      );
+<span class="nc bnc" id="L320" title="All 2 branches missed.">      if (targetCell != null) {</span>
+<span class="nc" id="L321">        rayIntersected = true;</span>
+      }
+<span class="nc" id="L323">      alpha += 0.1f;</span>
+<span class="nc" id="L324">    }</span>
+<span class="nc" id="L325">    return output;</span>
+  }
+
+  /**
+   * Checks if the player has walked over an ability orb, works on dynamically spawned objects.
+   *
+   * @param world The game world
+   * @return The object the player walked over
+   * */
+  public PowerUp getNearbyPowerUps(World world) {
+<span class="nc" id="L335">    List&lt;GameEntity&gt; ents = world.getEntities();</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">    for (GameEntity ent : ents) {</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">      if (ent instanceof PowerUp) {</span>
+<span class="nc bnc" id="L338" title="All 2 branches missed.">        if (Intersector.overlaps(sprite.getBoundingRectangle(), ent.sprite.getBoundingRectangle())) {</span>
+<span class="nc bnc" id="L339" title="All 2 branches missed.">          if (((PowerUp) ent).canPickup()) {</span>
+<span class="nc" id="L340">            return (PowerUp) ent;</span>
+          }
+        }
+      }
+<span class="nc" id="L344">    }</span>
+<span class="nc" id="L345">    return null;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.3.201901230119</span></div></body></html>
