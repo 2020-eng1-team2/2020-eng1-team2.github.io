@@ -114,21 +114,21 @@ public abstract class Npc extends GameEntity {
 
 <span class="fc" id="L115">      boolean entityMoved = false;</span>
 <span class="pc bpc" id="L116" title="2 of 4 branches missed.">      if (currentDirection.x == targetDirection.x &amp;&amp; targetDirection.x != 0) {</span>
-<span class="fc" id="L117">        float velocityX = Math.signum(targetCoordinates.x - position.x) * maxSpeed;</span>
-<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (state == States.FLEEING) {</span>
+<span class="nc" id="L117">        float velocityX = Math.signum(targetCoordinates.x - position.x) * maxSpeed;</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (state == States.FLEEING) {</span>
 <span class="nc" id="L119">          velocityX *= World.NPC_FLEE_MULTIPLIER;</span>
         }
-<span class="fc" id="L121">        position.x += velocityX;</span>
-<span class="fc" id="L122">        entityMoved = true;</span>
+<span class="nc" id="L121">        position.x += velocityX;</span>
+<span class="nc" id="L122">        entityMoved = true;</span>
       }
 
 <span class="pc bpc" id="L125" title="2 of 4 branches missed.">      if (currentDirection.y == targetDirection.y &amp;&amp; targetDirection.y != 0) {</span>
-<span class="nc" id="L126">        float velocityY = Math.signum(targetCoordinates.y - position.y) * maxSpeed;</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">        if (state == States.FLEEING) {</span>
+<span class="fc" id="L126">        float velocityY = Math.signum(targetCoordinates.y - position.y) * maxSpeed;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (state == States.FLEEING) {</span>
 <span class="nc" id="L128">          velocityY *= World.NPC_FLEE_MULTIPLIER;</span>
         }
-<span class="nc" id="L130">        position.y += velocityY;</span>
-<span class="nc" id="L131">        entityMoved = true;</span>
+<span class="fc" id="L130">        position.y += velocityY;</span>
+<span class="fc" id="L131">        entityMoved = true;</span>
       }
 
 <span class="pc bpc" id="L134" title="1 of 2 branches missed.">      if (!entityMoved) {</span>

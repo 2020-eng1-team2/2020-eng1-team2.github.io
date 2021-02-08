@@ -548,7 +548,7 @@ public class World implements Json.Serializable {
 <span class="pc bpc" id="L548" title="1 of 2 branches missed.">    if (civExist) {</span>
       do {
 <span class="fc" id="L550">        ent = this.getEntities().get(this.randomNumberGenerator.nextInt(this.getEntities().size()));</span>
-<span class="pc bpc" id="L551" title="1 of 2 branches missed.">      } while (!(ent instanceof Civilian));</span>
+<span class="fc bfc" id="L551" title="All 2 branches covered.">      } while (!(ent instanceof Civilian));</span>
 <span class="fc" id="L552">      Vector2 spawnPos = ent.position;</span>
 <span class="fc" id="L553">      PowerUp powerUpTest = new PowerUp(spawnPos.x, spawnPos.y, this, Abilities.randomAbility());</span>
 <span class="fc" id="L554">      queueEntityAdd(powerUpTest);</span>
